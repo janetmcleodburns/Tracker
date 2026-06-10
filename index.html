@@ -6,22 +6,10 @@
 <title>Janet's Tracker</title>
 <style>
   :root {
-    --cream: #FAF8F4;
-    --white: #FFFFFF;
-    --ink: #1C1A17;
-    --ink-mid: #6B6760;
-    --ink-light: #A8A5A0;
-    --border: #E8E4DC;
-    --teal: #1A7F6E;
-    --teal-light: #E8F5F2;
-    --teal-mid: #2FA899;
-    --amber: #C8770A;
-    --amber-light: #FEF4E5;
-    --red: #C0392B;
-    --red-light: #FDECEA;
-    --gold: #E5A820;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --cream: #FAF8F4; --white: #FFFFFF; --ink: #1C1A17; --ink-mid: #6B6760; --ink-light: #A8A5A0;
+    --border: #E8E4DC; --teal: #1A7F6E; --teal-light: #E8F5F2; --teal-mid: #2FA899;
+    --amber: #C8770A; --amber-light: #FEF4E5; --red: #C0392B; --red-light: #FDECEA; --gold: #E5A820;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.5; }
@@ -50,8 +38,10 @@
   .filter-btn, .cat-filter { font-size: 12px; font-weight: 500; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--ink-mid); transition: all 0.15s; }
   .filter-btn:hover, .cat-filter:hover { border-color: var(--teal-mid); color: var(--teal); }
   .filter-btn.active, .cat-filter.active { background: var(--teal); border-color: var(--teal); color: #fff; }
-  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; box-shadow: var(--shadow); transition: box-shadow 0.15s; position: relative; overflow: hidden; }
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 10px; box-shadow: var(--shadow); transition: box-shadow 0.15s, opacity 0.15s; position: relative; overflow: hidden; }
   .card:hover { box-shadow: var(--shadow-md); }
+  .card.dragging { opacity: 0.4; box-shadow: var(--shadow-md); }
+  .card.drag-over { border-color: var(--teal-mid); border-style: dashed; }
   .card-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 12px 0 0 12px; }
   .card-inner { padding-left: 8px; }
   .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
@@ -59,6 +49,9 @@
   .card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
   .card-detail { font-size: 14px; color: var(--ink-mid); margin-bottom: 8px; display: flex; align-items: flex-start; gap: 6px; }
   .card-meta { display: flex; gap: 14px; font-size: 12px; color: var(--ink-light); flex-wrap: wrap; }
+  .drag-handle { cursor: grab; color: var(--ink-light); font-size: 16px; padding: 2px 4px; border-radius: 4px; line-height: 1; border: none; background: none; flex-shrink: 0; touch-action: none; }
+  .drag-handle:hover { color: var(--teal); background: var(--teal-light); }
+  .drag-handle:active { cursor: grabbing; }
   .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 8px; }
   .badge-High { background: var(--red-light); color: var(--red); }
   .badge-Medium { background: var(--amber-light); color: var(--amber); }
@@ -93,6 +86,7 @@
   .empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
   .empty p { font-size: 14px; }
   .loading { text-align: center; padding: 2rem; color: var(--ink-light); font-size: 14px; }
+  .drag-hint { font-size: 12px; color: var(--ink-light); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
   .cat-manager { background: var(--teal-light); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; display: none; }
   .cat-manager.open { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .cat-manager input { max-width: 180px; }
@@ -202,57 +196,49 @@
 </main>
 
 <script>
-const SUPA_URL = 'https://egqyhhqtcpssdwolbtvd.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXloaHF0Y3Bzc2R3b2xidHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjE4NjAsImV4cCI6MjA5NjU5Nzg2MH0.AYzOBpIj4RdbLxrKf_IEQOEurbxDVWtKra_jVZrHKPg';
+const SUPA_URL='https://egqyhhqtcpssdwolbtvd.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXloaHF0Y3Bzc2R3b2xidHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjE4NjAsImV4cCI6MjA5NjU5Nzg2MH0.AYzOBpIj4RdbLxrKf_IEQOEurbxDVWtKra_jVZrHKPg';
 
 let wItems=[], tItems=[], cats=[];
 let wFilter='all', tFilter='all', tCatFilter='all';
+let dragSrc=null, dragType=null;
 
-function setSyncStatus(state, msg){
+function setSyncStatus(state,msg){
   const dot=document.getElementById('sync-dot');
-  const lbl=document.getElementById('sync-label');
   dot.className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
-  lbl.textContent=msg||'Connected';
+  document.getElementById('sync-label').textContent=msg||'Synced ✓';
 }
 
-async function api(method, table, body, id){
-  setSyncStatus('syncing','Syncing...');
-  const url=`${SUPA_URL}/rest/v1/${table}${id?`?id=eq.${id}`:''}`;
-  const opts={
-    method,
-    headers:{
-      'apikey': SUPA_KEY,
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': method==='POST'?'return=representation':'return=representation'
-    }
-  };
-  if(body) opts.body=JSON.stringify(body);
-  try{
-    const r=await fetch(url,opts);
-    if(!r.ok){const e=await r.text();throw new Error(e);}
-    const data=r.status===204?null:await r.json();
-    setSyncStatus('ok','Synced ✓');
-    return data;
-  }catch(e){
-    setSyncStatus('error','Sync error');
-    console.error(e);
-    return null;
-  }
-}
+const hdrs={'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'};
 
 async function fetchAll(){
   setSyncStatus('syncing','Loading...');
-  const [w,t,c]=await Promise.all([
-    fetch(`${SUPA_URL}/rest/v1/wthbf?select=*&order=added.desc`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}}).then(r=>r.json()),
-    fetch(`${SUPA_URL}/rest/v1/tasks?select=*&order=added.desc`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}}).then(r=>r.json()),
-    fetch(`${SUPA_URL}/rest/v1/categories?select=*&order=name.asc`,{headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}}).then(r=>r.json()),
-  ]);
-  wItems=Array.isArray(w)?w:[];
-  tItems=Array.isArray(t)?t:[];
-  cats=Array.isArray(c)?c.map(x=>x.name):['Personal','Home','Work'];
-  setSyncStatus('ok','Synced ✓');
-  renderAll();
+  try{
+    const [w,t,c]=await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/wthbf?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
+      fetch(`${SUPA_URL}/rest/v1/tasks?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
+      fetch(`${SUPA_URL}/rest/v1/categories?select=*&order=name.asc`,{headers:hdrs}).then(r=>r.json()),
+    ]);
+    wItems=Array.isArray(w)?w:[];
+    tItems=Array.isArray(t)?t:[];
+    cats=Array.isArray(c)?c.map(x=>x.name):['Personal','Home','Work'];
+    setSyncStatus('ok','Synced ✓');
+    renderAll();
+  }catch(e){setSyncStatus('error','Sync error');console.error(e);}
+}
+
+async function patchOrder(table, items){
+  setSyncStatus('syncing','Saving order...');
+  try{
+    await Promise.all(items.map((item,i)=>
+      fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${item.id}`,{
+        method:'PATCH',
+        headers:hdrs,
+        body:JSON.stringify({sort_order:i})
+      })
+    ));
+    setSyncStatus('ok','Synced ✓');
+  }catch(e){setSyncStatus('error','Sync error');}
 }
 
 function isOD(item){const d=item.followup||item.due;if(!d)return false;return new Date(d)<new Date(new Date().toDateString());}
@@ -277,8 +263,7 @@ function switchTab(tab,btn){
 
 function setFilter(type,f,btn){
   if(type==='w') wFilter=f; else tFilter=f;
-  const rows=document.getElementById('pane-'+(type==='w'?'wthbf':'tasks')).querySelectorAll('.filter-btn');
-  rows.forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+(type==='w'?'wthbf':'tasks')).querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   if(type==='w') renderW(); else renderT();
 }
@@ -314,56 +299,132 @@ function renderCatTags(){
 }
 
 function toggleCatManager(){
-  const m=document.getElementById('cat-manager');
-  m.classList.toggle('open');
+  document.getElementById('cat-manager').classList.toggle('open');
   renderCatTags();
 }
 
 async function addCat(){
   const v=document.getElementById('new-cat-input').value.trim();
   if(!v||cats.includes(v))return;
-  await api('POST','categories',{name:v});
+  await fetch(`${SUPA_URL}/rest/v1/categories`,{method:'POST',headers:hdrs,body:JSON.stringify({name:v})});
   document.getElementById('new-cat-input').value='';
-  await fetchAll();
-  renderCatTags();
+  await fetchAll();renderCatTags();
 }
 
 async function delCat(i){
-  const name=cats[i];
-  await fetch(`${SUPA_URL}/rest/v1/categories?name=eq.${encodeURIComponent(name)}`,{
-    method:'DELETE',
-    headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}
+  await fetch(`${SUPA_URL}/rest/v1/categories?name=eq.${encodeURIComponent(cats[i])}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();renderCatTags();
+}
+
+// Drag and drop
+function makeDraggable(el, id, type){
+  el.setAttribute('draggable','true');
+  el.dataset.id=id;
+  el.dataset.type=type;
+
+  el.addEventListener('dragstart',e=>{
+    dragSrc=el;dragType=type;
+    setTimeout(()=>el.classList.add('dragging'),0);
+    e.dataTransfer.effectAllowed='move';
   });
-  await fetchAll();
-  renderCatTags();
+  el.addEventListener('dragend',()=>{
+    el.classList.remove('dragging');
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
+  });
+  el.addEventListener('dragover',e=>{
+    e.preventDefault();
+    if(dragSrc&&dragSrc!==el&&dragType===type) el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
+  el.addEventListener('drop',e=>{
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    if(!dragSrc||dragSrc===el||dragType!==type) return;
+    const list=type==='w'?wItems:tItems;
+    const fromId=parseInt(dragSrc.dataset.id);
+    const toId=parseInt(el.dataset.id);
+    const fromIdx=list.findIndex(i=>i.id===fromId);
+    const toIdx=list.findIndex(i=>i.id===toId);
+    if(fromIdx===-1||toIdx===-1) return;
+    const [moved]=list.splice(fromIdx,1);
+    list.splice(toIdx,0,moved);
+    if(type==='w'){wItems=[...list];renderW();}
+    else{tItems=[...list];renderT();}
+    patchOrder(type==='w'?'wthbf':'tasks',list);
+  });
+
+  // Touch support
+  let touchY=0,touchEl=null;
+  el.addEventListener('touchstart',e=>{touchY=e.touches[0].clientY;touchEl=el;dragSrc=el;dragType=type;},{ passive:true });
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    const y=e.touches[0].clientY;
+    const els=document.elementsFromPoint(e.touches[0].clientX,y);
+    const target=els.find(x=>x.classList.contains('card')&&x!==touchEl);
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
+    if(target) target.classList.add('drag-over');
+  },{passive:false});
+  el.addEventListener('touchend',e=>{
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
+    const y=e.changedTouches[0].clientY;
+    const els=document.elementsFromPoint(e.changedTouches[0].clientX,y);
+    const target=els.find(x=>x.classList.contains('card')&&x!==touchEl);
+    if(!target) return;
+    const list=type==='w'?wItems:tItems;
+    const fromId=parseInt(touchEl.dataset.id);
+    const toId=parseInt(target.dataset.id);
+    const fromIdx=list.findIndex(i=>i.id===fromId);
+    const toIdx=list.findIndex(i=>i.id===toId);
+    if(fromIdx===-1||toIdx===-1) return;
+    const [moved]=list.splice(fromIdx,1);
+    list.splice(toIdx,0,moved);
+    if(type==='w'){wItems=[...list];renderW();}
+    else{tItems=[...list];renderT();}
+    patchOrder(type==='w'?'wthbf':'tasks',list);
+    dragSrc=null;
+  });
+}
+
+function cardHTML(i, type){
+  const isW=type==='w';
+  return `
+    <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="drag-handle" title="Drag to reorder">⠿</span>
+          <div class="card-name">${isW?i.name:i.name}</div>
+        </div>
+        <div class="card-actions">
+          ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
+          ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
+          <span class="badge badge-${i.priority}">${i.priority}</span>
+          <button class="del-btn" onclick="${isW?'delW':'delT'}(${i.id})">✕</button>
+        </div>
+      </div>
+      <div class="card-detail">${isW?'⏳ '+i.waiting:(i.notes?'📝 '+i.notes:'')}</div>
+      <div class="card-meta">
+        <span>📅 Added ${fmt(i.added)}</span>
+        ${isW&&i.followup?`<span>🔔 Follow up ${fmt(i.followup)}</span>`:''}
+        ${!isW&&i.due?`<span>⚑ Due ${fmt(i.due)}${isOD(i)?' — overdue':''}</span>`:''}
+      </div>
+    </div>`;
 }
 
 function renderW(){
   let f=wItems;
   if(wFilter==='overdue')f=wItems.filter(isOD);
   else if(wFilter!=='all')f=wItems.filter(i=>i.priority===wFilter);
-  f=[...f].sort((a,b)=>({High:0,Medium:1,Low:2}[a.priority]||1)-({High:0,Medium:1,Low:2}[b.priority]||1));
   const el=document.getElementById('wthbf-list');
   if(!f.length){el.innerHTML='<div class="empty"><div class="empty-icon">✓</div><p>Nothing waiting — all caught up!</p></div>';return;}
-  el.innerHTML=f.map(i=>`
-    <div class="card">
-      <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
-      <div class="card-inner">
-        <div class="card-top">
-          <div class="card-name">${i.name}</div>
-          <div class="card-actions">
-            ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
-            <span class="badge badge-${i.priority}">${i.priority}</span>
-            <button class="del-btn" onclick="delW(${i.id})">✕</button>
-          </div>
-        </div>
-        <div class="card-detail">⏳ ${i.waiting}</div>
-        <div class="card-meta">
-          <span>📅 Added ${fmt(i.added)}</span>
-          ${i.followup?`<span>🔔 Follow up ${fmt(i.followup)}</span>`:''}
-        </div>
-      </div>
-    </div>`).join('');
+  el.innerHTML='<div class="drag-hint">⠿ Drag cards to reorder</div>';
+  f.forEach(i=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=cardHTML(i,'w');
+    makeDraggable(card,i.id,'w');
+    el.appendChild(card);
+  });
 }
 
 function renderT(){
@@ -371,38 +432,24 @@ function renderT(){
   if(tFilter==='overdue')f=tItems.filter(isOD);
   else if(tFilter!=='all')f=tItems.filter(i=>i.priority===tFilter);
   if(tCatFilter!=='all')f=f.filter(i=>i.category===tCatFilter);
-  f=[...f].sort((a,b)=>({High:0,Medium:1,Low:2}[a.priority]||1)-({High:0,Medium:1,Low:2}[b.priority]||1));
   const el=document.getElementById('tasks-list');
   if(!f.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p>No tasks here!</p></div>';return;}
-  el.innerHTML=f.map(i=>`
-    <div class="card">
-      <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
-      <div class="card-inner">
-        <div class="card-top">
-          <div class="card-name">${i.name}</div>
-          <div class="card-actions">
-            ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
-            ${i.category?`<span class="cat-badge">${i.category}</span>`:''}
-            <span class="badge badge-${i.priority}">${i.priority}</span>
-            <button class="del-btn" onclick="delT(${i.id})">✕</button>
-          </div>
-        </div>
-        ${i.notes?`<div class="card-detail">📝 ${i.notes}</div>`:''}
-        <div class="card-meta">
-          <span>📅 Added ${fmt(i.added)}</span>
-          ${i.due?`<span>⚑ Due ${fmt(i.due)}${isOD(i)?' — overdue':''}</span>`:''}
-        </div>
-      </div>
-    </div>`).join('');
+  el.innerHTML='<div class="drag-hint">⠿ Drag cards to reorder</div>';
+  f.forEach(i=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=cardHTML(i,'t');
+    makeDraggable(card,i.id,'t');
+    el.appendChild(card);
+  });
 }
 
 async function delW(id){
-  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
   await fetchAll();
 }
-
 async function delT(id){
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`}});
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
   await fetchAll();
 }
 
@@ -412,15 +459,13 @@ async function addW(){
   if(!name||!waiting)return;
   const btn=document.getElementById('w-add-btn');
   btn.disabled=true;btn.textContent='Saving...';
-  await api('POST','wthbf',{
-    name,waiting,
-    priority:document.getElementById('w-pri').value,
+  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({
+    name,waiting,priority:document.getElementById('w-pri').value,
     followup:document.getElementById('w-followup').value||null,
-    added:new Date().toISOString().split('T')[0]
-  });
-  document.getElementById('w-name').value='';
-  document.getElementById('w-waiting').value='';
-  document.getElementById('w-followup').value='';
+    added:new Date().toISOString().split('T')[0],sort_order:nextOrder
+  })});
+  document.getElementById('w-name').value='';document.getElementById('w-waiting').value='';document.getElementById('w-followup').value='';
   btn.disabled=false;btn.textContent='Add item';
   await fetchAll();
 }
@@ -430,17 +475,14 @@ async function addT(){
   if(!name)return;
   const btn=document.getElementById('t-add-btn');
   btn.disabled=true;btn.textContent='Saving...';
-  await api('POST','tasks',{
-    name,
-    notes:document.getElementById('t-notes').value.trim()||null,
-    priority:document.getElementById('t-pri').value,
-    category:document.getElementById('t-cat').value,
+  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({
+    name,notes:document.getElementById('t-notes').value.trim()||null,
+    priority:document.getElementById('t-pri').value,category:document.getElementById('t-cat').value,
     due:document.getElementById('t-due').value||null,
-    added:new Date().toISOString().split('T')[0]
-  });
-  document.getElementById('t-name').value='';
-  document.getElementById('t-notes').value='';
-  document.getElementById('t-due').value='';
+    added:new Date().toISOString().split('T')[0],sort_order:nextOrder
+  })});
+  document.getElementById('t-name').value='';document.getElementById('t-notes').value='';document.getElementById('t-due').value='';
   btn.disabled=false;btn.textContent='Add task';
   await fetchAll();
 }
@@ -450,12 +492,11 @@ function startMic(targetId,btn){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){alert('Voice dictation not supported. Try Chrome or Safari.');return;}
   if(recognition){recognition.stop();recognition=null;document.querySelectorAll('.mic-btn').forEach(b=>{b.classList.remove('listening');b.textContent='🎤';});return;}
-  recognition=new SR();
-  recognition.continuous=false;recognition.interimResults=false;recognition.lang='en-US';
+  recognition=new SR();recognition.continuous=false;recognition.interimResults=false;recognition.lang='en-US';
   btn.classList.add('listening');btn.textContent='🛑';
-  recognition.onresult=function(e){document.getElementById(targetId).value=e.results[0][0].transcript;recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
-  recognition.onerror=function(){recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
-  recognition.onend=function(){if(recognition){recognition=null;btn.classList.remove('listening');btn.textContent='🎤';}};
+  recognition.onresult=e=>{document.getElementById(targetId).value=e.results[0][0].transcript;recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
+  recognition.onerror=()=>{recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
+  recognition.onend=()=>{if(recognition){recognition=null;btn.classList.remove('listening');btn.textContent='🎤';}};
   recognition.start();
 }
 
