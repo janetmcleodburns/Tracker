@@ -87,6 +87,9 @@
   .empty p { font-size: 14px; }
   .loading { text-align: center; padding: 2rem; color: var(--ink-light); font-size: 14px; }
   .drag-hint { font-size: 12px; color: var(--ink-light); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+  .move-btn { background: none; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--ink-light); padding: 2px 6px; font-size: 13px; transition: all 0.15s; line-height: 1.4; }
+  .move-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+  .move-btn:disabled { opacity: 0.2; cursor: default; }
   .cat-manager { background: var(--teal-light); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; display: none; }
   .cat-manager.open { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .cat-manager input { max-width: 180px; }
@@ -385,7 +388,7 @@ function makeDraggable(el, id, type){
   });
 }
 
-function cardHTML(i, type){
+function cardHTML(i, type, idx, total){
   const isW=type==='w';
   return `
     <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
@@ -393,9 +396,11 @@ function cardHTML(i, type){
       <div class="card-top">
         <div style="display:flex;align-items:center;gap:8px">
           <span class="drag-handle" title="Drag to reorder">⠿</span>
-          <div class="card-name">${isW?i.name:i.name}</div>
+          <div class="card-name">${i.name}</div>
         </div>
         <div class="card-actions">
+          <button class="move-btn" onclick="moveItem('${type}',${idx},-1)" ${idx===0?'disabled':''} title="Move up">▲</button>
+          <button class="move-btn" onclick="moveItem('${type}',${idx},1)" ${idx===total-1?'disabled':''} title="Move down">▼</button>
           ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
@@ -417,11 +422,11 @@ function renderW(){
   else if(wFilter!=='all')f=wItems.filter(i=>i.priority===wFilter);
   const el=document.getElementById('wthbf-list');
   if(!f.length){el.innerHTML='<div class="empty"><div class="empty-icon">✓</div><p>Nothing waiting — all caught up!</p></div>';return;}
-  el.innerHTML='<div class="drag-hint">⠿ Drag cards to reorder</div>';
-  f.forEach(i=>{
+  el.innerHTML='<div class="drag-hint">⠿ Drag to reorder on desktop · ▲▼ to reorder on mobile</div>';
+  f.forEach((i,idx)=>{
     const card=document.createElement('div');
     card.className='card';
-    card.innerHTML=cardHTML(i,'w');
+    card.innerHTML=cardHTML(i,'w',idx,f.length);
     makeDraggable(card,i.id,'w');
     el.appendChild(card);
   });
@@ -434,14 +439,25 @@ function renderT(){
   if(tCatFilter!=='all')f=f.filter(i=>i.category===tCatFilter);
   const el=document.getElementById('tasks-list');
   if(!f.length){el.innerHTML='<div class="empty"><div class="empty-icon">🎉</div><p>No tasks here!</p></div>';return;}
-  el.innerHTML='<div class="drag-hint">⠿ Drag cards to reorder</div>';
-  f.forEach(i=>{
+  el.innerHTML='<div class="drag-hint">⠿ Drag to reorder on desktop · ▲▼ to reorder on mobile</div>';
+  f.forEach((i,idx)=>{
     const card=document.createElement('div');
     card.className='card';
-    card.innerHTML=cardHTML(i,'t');
+    card.innerHTML=cardHTML(i,'t',idx,f.length);
     makeDraggable(card,i.id,'t');
     el.appendChild(card);
   });
+}
+
+async function moveItem(type, idx, dir){
+  const list=type==='w'?wItems:tItems;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=list.length) return;
+  const [moved]=list.splice(idx,1);
+  list.splice(newIdx,0,moved);
+  if(type==='w'){wItems=[...list];renderW();}
+  else{tItems=[...list];renderT();}
+  await patchOrder(type==='w'?'wthbf':'tasks',list);
 }
 
 async function delW(id){
