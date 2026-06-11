@@ -90,6 +90,8 @@
   .move-btn { background: none; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--ink-light); padding: 2px 6px; font-size: 13px; transition: all 0.15s; line-height: 1.4; }
   .move-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
   .move-btn:disabled { opacity: 0.2; cursor: default; }
+  .convert-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--ink-light); padding: 4px 8px; font-size: 12px; transition: all 0.15s; white-space: nowrap; }
+  .convert-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
   .edit-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--ink-light); padding: 4px 8px; font-size: 13px; transition: all 0.15s; }
   .edit-btn:hover { background: var(--amber-light); color: var(--amber); border-color: var(--amber); }
   .edit-form { background: var(--cream); border-radius: 10px; padding: 12px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
@@ -438,6 +440,7 @@ function cardHTML(i, type, idx, total){
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
           <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
+          ${!isW?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
           <button class="complete-btn" onclick="${isW?'completeW':'completeT'}(${i.id})" title="Mark complete">✓</button>
           <button class="del-btn" onclick="${isW?'delW':'delT'}(${i.id})" title="Delete">✕</button>
         </div>
@@ -559,6 +562,21 @@ function renderCompleted(){
         </div>
       </div>
     </div>`).join('');
+}
+
+async function convertToWthbf(id){
+  const task=tItems.find(i=>i.id===id);
+  if(!task) return;
+  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({
+    name:task.name,
+    waiting:task.notes||task.name,
+    priority:task.priority,
+    added:new Date().toISOString().split('T')[0],
+    sort_order:nextOrder
+  })});
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
 }
 
 async function completeW(id){
