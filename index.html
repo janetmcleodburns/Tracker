@@ -440,7 +440,6 @@ function cardHTML(i, type, idx, total){
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
           <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
-          ${!isW?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
           <button class="complete-btn" onclick="${isW?'completeW':'completeT'}(${i.id})" title="Mark complete">✓</button>
           <button class="del-btn" onclick="${isW?'delW':'delT'}(${i.id})" title="Delete">✕</button>
         </div>
@@ -487,6 +486,7 @@ function cardHTML(i, type, idx, total){
         <div class="edit-row">
           <button class="save-btn" onclick="${isW?'saveW':'saveT'}(${i.id})">Save</button>
           <button class="cancel-btn" onclick="toggleEdit(${i.id},'${type}')">Cancel</button>
+          ${!isW?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ Move to WTHBF</button>`:''}
         </div>
       </div>
     </div>`;
