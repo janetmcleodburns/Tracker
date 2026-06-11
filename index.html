@@ -90,6 +90,23 @@
   .move-btn { background: none; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--ink-light); padding: 2px 6px; font-size: 13px; transition: all 0.15s; line-height: 1.4; }
   .move-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
   .move-btn:disabled { opacity: 0.2; cursor: default; }
+  .edit-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--ink-light); padding: 4px 8px; font-size: 13px; transition: all 0.15s; }
+  .edit-btn:hover { background: var(--amber-light); color: var(--amber); border-color: var(--amber); }
+  .edit-form { background: var(--cream); border-radius: 10px; padding: 12px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .edit-form .form-grid-2 { margin-bottom: 0; }
+  .edit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+  .save-btn { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 7px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  .save-btn:hover { background: var(--teal-mid); }
+  .cancel-btn { background: none; border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: var(--ink-mid); transition: all 0.15s; }
+  .cancel-btn:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+  .complete-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--ink-light); padding: 4px 8px; font-size: 13px; transition: all 0.15s; }
+  .complete-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+  .restore-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; color: var(--ink-light); padding: 4px 8px; font-size: 12px; transition: all 0.15s; }
+  .restore-btn:hover { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+  .card.completed-card { opacity: 0.75; }
+  .card.completed-card .card-name { text-decoration: line-through; color: var(--ink-mid); }
+  .accent-completed { background: var(--ink-light); }
+  .completed-section-title { font-size: 12px; font-weight: 600; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.5px; margin: 1.5rem 0 0.75rem; display: flex; align-items: center; gap: 6px; }
   .cat-manager { background: var(--teal-light); border-radius: 10px; padding: 10px 14px; margin-bottom: 10px; display: none; }
   .cat-manager.open { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .cat-manager input { max-width: 180px; }
@@ -128,6 +145,7 @@
 <div class="tabs">
   <button class="tab active" onclick="switchTab('wthbf',this)">⏳ WTHBF <span class="tab-count" id="w-tab-count">—</span></button>
   <button class="tab" onclick="switchTab('tasks',this)">✅ Tasks <span class="tab-count" id="t-tab-count">—</span></button>
+  <button class="tab" onclick="switchTab('completed',this)">🏆 Completed <span class="tab-count" id="c-tab-count">—</span></button>
 </div>
 
 <main>
@@ -196,14 +214,24 @@
       </div>
     </div>
   </div>
+
+  <!-- COMPLETED PANE -->
+  <div class="pane" id="pane-completed">
+    <div class="toolbar">
+      <button class="filter-btn active" onclick="setCompFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setCompFilter('wthbf',this)">WTHBF</button>
+      <button class="filter-btn" onclick="setCompFilter('tasks',this)">Tasks</button>
+    </div>
+    <div id="completed-list"><div class="loading">Loading...</div></div>
+  </div>
 </main>
 
 <script>
 const SUPA_URL='https://egqyhhqtcpssdwolbtvd.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXloaHF0Y3Bzc2R3b2xidHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjE4NjAsImV4cCI6MjA5NjU5Nzg2MH0.AYzOBpIj4RdbLxrKf_IEQOEurbxDVWtKra_jVZrHKPg';
 
-let wItems=[], tItems=[], cats=[];
-let wFilter='all', tFilter='all', tCatFilter='all';
+let wItems=[], tItems=[], cats=[], wCompleted=[], tCompleted=[];
+let wFilter='all', tFilter='all', tCatFilter='all', compFilter='all';
 let dragSrc=null, dragType=null;
 
 function setSyncStatus(state,msg){
@@ -222,8 +250,12 @@ async function fetchAll(){
       fetch(`${SUPA_URL}/rest/v1/tasks?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
       fetch(`${SUPA_URL}/rest/v1/categories?select=*&order=name.asc`,{headers:hdrs}).then(r=>r.json()),
     ]);
-    wItems=Array.isArray(w)?w:[];
-    tItems=Array.isArray(t)?t:[];
+    const allW=Array.isArray(w)?w:[];
+    const allT=Array.isArray(t)?t:[];
+    wItems=allW.filter(i=>!i.completed);
+    tItems=allT.filter(i=>!i.completed);
+    wCompleted=allW.filter(i=>i.completed);
+    tCompleted=allT.filter(i=>i.completed);
     cats=Array.isArray(c)?c.map(x=>x.name):['Personal','Home','Work'];
     setSyncStatus('ok','Synced ✓');
     renderAll();
@@ -253,9 +285,10 @@ function updateHeader(){
   document.getElementById('hdr-overdue').textContent=[...wItems,...tItems].filter(isOD).length;
   document.getElementById('w-tab-count').textContent=wItems.length;
   document.getElementById('t-tab-count').textContent=tItems.length;
+  document.getElementById('c-tab-count').textContent=wCompleted.length+tCompleted.length;
 }
 
-function renderAll(){renderW();renderT();renderCatFilters();renderCatSelect();updateHeader();}
+function renderAll(){renderW();renderT();renderCompleted();renderCatFilters();renderCatSelect();updateHeader();}
 
 function switchTab(tab,btn){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -404,7 +437,9 @@ function cardHTML(i, type, idx, total){
           ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
-          <button class="del-btn" onclick="${isW?'delW':'delT'}(${i.id})">✕</button>
+          <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
+          <button class="complete-btn" onclick="${isW?'completeW':'completeT'}(${i.id})" title="Mark complete">✓</button>
+          <button class="del-btn" onclick="${isW?'delW':'delT'}(${i.id})" title="Delete">✕</button>
         </div>
       </div>
       <div class="card-detail">${isW?'⏳ '+i.waiting:(i.notes?'📝 '+i.notes:'')}</div>
@@ -412,6 +447,44 @@ function cardHTML(i, type, idx, total){
         <span>📅 Added ${fmt(i.added)}</span>
         ${isW&&i.followup?`<span>🔔 Follow up ${fmt(i.followup)}</span>`:''}
         ${!isW&&i.due?`<span>⚑ Due ${fmt(i.due)}${isOD(i)?' — overdue':''}</span>`:''}
+      </div>
+      <div class="edit-form" id="edit-form-${i.id}" style="display:none">
+        ${isW?`
+        <div class="form-grid-2">
+          <div class="form-col"><label class="form-label">Contact name</label><input type="text" id="ef-name-${i.id}" value="${i.name}"></div>
+          <div class="form-col"><label class="form-label">Priority</label>
+            <select id="ef-pri-${i.id}">
+              <option ${i.priority==='High'?'selected':''}>High</option>
+              <option ${i.priority==='Medium'?'selected':''}>Medium</option>
+              <option ${i.priority==='Low'?'selected':''}>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-col"><label class="form-label">What I'm waiting on</label><input type="text" id="ef-waiting-${i.id}" value="${i.waiting||''}"></div>
+        <div class="form-col"><label class="form-label">Follow-up date</label><input type="date" id="ef-followup-${i.id}" value="${i.followup||''}"></div>
+        `:`
+        <div class="form-grid-2">
+          <div class="form-col"><label class="form-label">Task</label><input type="text" id="ef-name-${i.id}" value="${i.name}"></div>
+          <div class="form-col"><label class="form-label">Priority</label>
+            <select id="ef-pri-${i.id}">
+              <option ${i.priority==='High'?'selected':''}>High</option>
+              <option ${i.priority==='Medium'?'selected':''}>Medium</option>
+              <option ${i.priority==='Low'?'selected':''}>Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-col"><label class="form-label">Category</label>
+            <select id="ef-cat-${i.id}">${cats.map(c=>`<option ${i.category===c?'selected':''}>${c}</option>`).join('')}</select>
+          </div>
+          <div class="form-col"><label class="form-label">Due date</label><input type="date" id="ef-due-${i.id}" value="${i.due||''}"></div>
+        </div>
+        <div class="form-col"><label class="form-label">Notes</label><input type="text" id="ef-notes-${i.id}" value="${i.notes||''}"></div>
+        `}
+        <div class="edit-row">
+          <button class="save-btn" onclick="${isW?'saveW':'saveT'}(${i.id})">Save</button>
+          <button class="cancel-btn" onclick="toggleEdit(${i.id},'${type}')">Cancel</button>
+        </div>
       </div>
     </div>`;
 }
@@ -447,6 +520,94 @@ function renderT(){
     makeDraggable(card,i.id,'t');
     el.appendChild(card);
   });
+}
+
+function setCompFilter(f,btn){
+  compFilter=f;
+  document.querySelectorAll('#pane-completed .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCompleted();
+}
+
+function renderCompleted(){
+  let items=[];
+  if(compFilter==='all'||compFilter==='wthbf') wCompleted.forEach(i=>items.push({...i,_type:'w'}));
+  if(compFilter==='all'||compFilter==='tasks') tCompleted.forEach(i=>items.push({...i,_type:'t'}));
+  items.sort((a,b)=>new Date(b.completed_at||b.added)-new Date(a.completed_at||a.added));
+  const el=document.getElementById('completed-list');
+  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>Nothing completed yet — keep going!</p></div>';return;}
+  el.innerHTML=items.map(i=>`
+    <div class="card completed-card">
+      <div class="card-accent accent-completed"></div>
+      <div class="card-inner">
+        <div class="card-top">
+          <div>
+            <div style="font-size:11px;color:var(--ink-light);margin-bottom:2px">${i._type==='w'?'WTHBF':'TASK'}</div>
+            <div class="card-name">${i.name}</div>
+          </div>
+          <div class="card-actions">
+            ${i._type==='t'&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
+            <span class="badge badge-${i.priority}">${i.priority}</span>
+            <button class="restore-btn" onclick="${i._type==='w'?'restoreW':'restoreT'}(${i.id})" title="Restore">↩ Restore</button>
+            <button class="del-btn" onclick="${i._type==='w'?'delW':'delT'}(${i.id})" title="Delete permanently">✕</button>
+          </div>
+        </div>
+        <div class="card-detail">${i._type==='w'?'⏳ '+i.waiting:(i.notes?'📝 '+i.notes:'')}</div>
+        <div class="card-meta">
+          <span>📅 Added ${fmt(i.added)}</span>
+          ${i.completed_at?`<span>✓ Completed ${fmt(i.completed_at)}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function completeW(id){
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});
+  await fetchAll();
+}
+async function completeT(id){
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});
+  await fetchAll();
+}
+async function restoreW(id){
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});
+  await fetchAll();
+}
+async function restoreT(id){
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});
+  await fetchAll();
+}
+
+function toggleEdit(id, type){
+  const form=document.getElementById(`edit-form-${id}`);
+  if(form) form.style.display=form.style.display==='none'?'block':'none';
+}
+
+async function saveW(id){
+  const name=document.getElementById(`ef-name-${id}`).value.trim();
+  const waiting=document.getElementById(`ef-waiting-${id}`).value.trim();
+  if(!name||!waiting) return;
+  setSyncStatus('syncing','Saving...');
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({
+    name,waiting,
+    priority:document.getElementById(`ef-pri-${id}`).value,
+    followup:document.getElementById(`ef-followup-${id}`).value||null,
+  })});
+  await fetchAll();
+}
+
+async function saveT(id){
+  const name=document.getElementById(`ef-name-${id}`).value.trim();
+  if(!name) return;
+  setSyncStatus('syncing','Saving...');
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({
+    name,
+    priority:document.getElementById(`ef-pri-${id}`).value,
+    category:document.getElementById(`ef-cat-${id}`).value,
+    due:document.getElementById(`ef-due-${id}`).value||null,
+    notes:document.getElementById(`ef-notes-${id}`).value.trim()||null,
+  })});
+  await fetchAll();
 }
 
 async function moveItem(type, idx, dir){
