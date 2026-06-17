@@ -503,6 +503,7 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <span class="badge badge-${i.priority}">${i.priority}</span>
           <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
+          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})" title="Move to Personal">→ Personal</button>`:''}
           <button class="complete-btn" onclick="${compFn}(${i.id})" title="Mark complete">✓</button>
           <button class="del-btn" onclick="${delFn}(${i.id})" title="Delete">✕</button>
         </div>
@@ -542,6 +543,7 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <button class="save-btn" onclick="${saveFn}(${i.id})">Save</button>
           <button class="cancel-btn" onclick="toggleEdit(${i.id},'${type}')">Cancel</button>
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})">→ Move to WTHBF</button>`:''}
+          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})">→ Move to Personal</button>`:''}
         </div>
       </div>
     </div>`;
@@ -724,6 +726,15 @@ async function delW(id){await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{met
 async function delT(id){await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
 async function delPW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
 async function delPT(id){await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
+
+async function convertToPersonal(id){
+  const task=tItems.find(i=>i.id===id);
+  if(!task)return;
+  const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:'Personal',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
+}
 
 async function convertToWthbf(id){
   const task=tItems.find(i=>i.id===id);
