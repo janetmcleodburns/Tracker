@@ -92,10 +92,14 @@
   .move-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 6px;font-size:13px;transition:all 0.15s;line-height:1.4;}
   .move-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
   .move-btn:disabled{opacity:0.2;cursor:default;}
-  .move-top-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 7px;font-size:11px;transition:all 0.15s;white-space:nowrap;}
-  .move-top-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .move-pos-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 7px;font-size:11px;transition:all 0.15s;white-space:nowrap;}
-  .move-pos-btn:hover{background:var(--amber-light);color:var(--amber);border-color:var(--amber);}
+  .move-menu-wrap{position:relative;display:inline-block;}
+  .move-menu-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 7px;font-size:12px;transition:all 0.15s;white-space:nowrap;}
+  .move-menu-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
+  .move-dropdown{display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:50;min-width:140px;overflow:hidden;}
+  .move-dropdown.open{display:block;}
+  .move-dropdown button{display:block;width:100%;text-align:left;padding:8px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--ink);transition:background 0.12s;}
+  .move-dropdown button:hover{background:var(--teal-light);color:var(--teal);}
+  .move-dropdown hr{border:none;border-top:1px solid var(--border);margin:2px 0;}
   .reminder-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:#EEF2FF;color:#4F46E5;display:inline-flex;align-items:center;gap:3px;}
   .recurring-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--teal-light);color:var(--teal);display:inline-flex;align-items:center;gap:3px;}
   /* REMINDER MODAL */
@@ -401,13 +405,44 @@
     </div>
 
     <div id="rm-dates-section" style="display:none">
-      <div class="modal-section">Scheduled recurring dates</div>
-      <div class="dates-list" id="rm-dates-list"></div>
-      <button class="add-date-btn" onclick="addReminderDate()">＋ Add date</button>
+      <div class="modal-section">Recurrence pattern</div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="rm-pattern" value="monthly_day" id="rm-monthly-day" onchange="updatePatternUI()" checked />
+          On the <input type="number" id="rm-day-of-month" min="1" max="31" value="1" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;" /> of every month
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="rm-pattern" value="every_x_days" id="rm-every-x" onchange="updatePatternUI()" />
+          Every <input type="number" id="rm-x-days" min="1" value="7" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;" /> day(s)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="rm-pattern" value="weekly" id="rm-weekly" onchange="updatePatternUI()" />
+          Every week on
+          <select id="rm-weekday" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;">
+            <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+            <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+          </select>
+        </label>
+      </div>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;">
+          <div class="modal-section">Start date</div>
+          <input type="date" id="rm-start-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
+        </div>
+        <div style="flex:1;min-width:140px;">
+          <div class="modal-section">End date</div>
+          <input type="date" id="rm-end-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
+        </div>
+      </div>
+
+      <div id="rm-preview" style="margin-top:10px;font-size:12px;color:var(--ink-mid);background:var(--cream);padding:8px 10px;border-radius:8px;"></div>
     </div>
 
     <div class="modal-btns">
       <button class="modal-btn-cancel" onclick="closeReminderModal()">Cancel</button>
+      <button class="modal-btn-primary" onclick="previewDates()" style="background:var(--amber);">Preview dates</button>
       <button class="modal-btn-primary" onclick="saveReminderModal()">Save</button>
     </div>
   </div>
@@ -605,11 +640,17 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <div class="card-name">${i.name}</div>
         </div>
         <div class="card-actions">
-          <button class="move-btn" onclick="${moveFn}('${type}',${idx},-1)" ${idx===0?'disabled':''}>▲</button>
-          <button class="move-btn" onclick="${moveFn}('${type}',${idx},1)" ${idx===total-1?'disabled':''}>▼</button>
-          <button class="move-top-btn" onclick="moveToTop('${type}',${i.id})" ${idx===0?'style="opacity:0.3;pointer-events:none"':''}>⤒ Top</button>
-          <button class="move-top-btn" onclick="moveToBottom('${type}',${i.id})" ${idx===total-1?'style="opacity:0.3;pointer-events:none"':''}>⤓ Bot</button>
-          <button class="move-pos-btn" onclick="openPosModal('${type}',${i.id})"># Pos</button>
+          <div class="move-menu-wrap">
+            <button class="move-menu-btn" onclick="toggleMoveMenu('${i.id}',event)">⠿ Move</button>
+            <div class="move-dropdown" id="move-dd-${i.id}">
+              <button onclick="moveItem('${type}',${idx},-1);closeMoveMenus()" ${idx===0?'style="opacity:0.4;pointer-events:none"':''}>▲ Up one</button>
+              <button onclick="moveItem('${type}',${idx},1);closeMoveMenus()" ${idx===total-1?'style="opacity:0.4;pointer-events:none"':''}>▼ Down one</button>
+              <hr/>
+              <button onclick="moveToTop('${type}',${i.id});closeMoveMenus()" ${idx===0?'style="opacity:0.4;pointer-events:none"':''}>⤒ Move to top</button>
+              <button onclick="moveToBottom('${type}',${i.id});closeMoveMenus()" ${idx===total-1?'style="opacity:0.4;pointer-events:none"':''}>⤓ Move to bottom</button>
+              <button onclick="closeMoveMenus();openPosModal('${type}',${i.id})"># Move to position</button>
+            </div>
+          </div>
           ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
@@ -980,32 +1021,93 @@ function openReminderModal(id,type){
   document.getElementById('reminder-modal-task-name').textContent=task.name;
   document.getElementById('rm-reminder-on').checked=!!task.reminder;
   document.getElementById('rm-recurring').checked=!!task.recurring;
-  const dates=JSON.parse(task.recurring_dates||'[]');
-  renderReminderDates(dates);
   document.getElementById('rm-dates-section').style.display=task.recurring?'block':'none';
+
+  // Load saved pattern if exists
+  const saved=JSON.parse(task.recurring_dates||'{}');
+  if(saved.pattern){
+    document.getElementById('rm-'+saved.pattern.replace('_','-').replace('monthly-day','monthly-day').replace('every-x','every-x'))?.click();
+    if(saved.pattern==='monthly_day')document.getElementById('rm-day-of-month').value=saved.day||1;
+    if(saved.pattern==='every_x_days')document.getElementById('rm-x-days').value=saved.days||7;
+    if(saved.pattern==='weekly')document.getElementById('rm-weekday').value=saved.weekday||1;
+    document.getElementById('rm-start-date').value=saved.start||new Date().toISOString().split('T')[0];
+    document.getElementById('rm-end-date').value=saved.end||'';
+  } else {
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('rm-start-date').value=today;
+    document.getElementById('rm-end-date').value='';
+    document.getElementById('rm-monthly-day').checked=true;
+  }
+  document.getElementById('rm-preview').textContent='';
   document.getElementById('reminder-modal').classList.add('open');
 }
 
 function closeReminderModal(){document.getElementById('reminder-modal').classList.remove('open');}
 function toggleRecurringDates(){document.getElementById('rm-dates-section').style.display=document.getElementById('rm-recurring').checked?'block':'none';}
+function updatePatternUI(){}
 
-function renderReminderDates(dates){
-  document.getElementById('rm-dates-list').innerHTML=dates.map((d,i)=>`
-    <div class="date-row">
-      <input type="date" value="${d}" />
-      <button onclick="removeReminderDate(${i})">✕</button>
-    </div>`).join('');
+function generateDates(){
+  const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
+  const start=new Date(document.getElementById('rm-start-date').value||new Date().toISOString().split('T')[0]);
+  const endVal=document.getElementById('rm-end-date').value;
+  const end=endVal?new Date(endVal):new Date(start.getTime()+365*24*3600000*2);// default 2 years
+  const dates=[];
+  let cur=new Date(start);
+
+  if(pattern==='monthly_day'){
+    const day=parseInt(document.getElementById('rm-day-of-month').value)||1;
+    cur=new Date(start.getFullYear(),start.getMonth(),day);
+    if(cur<start)cur.setMonth(cur.getMonth()+1);
+    while(cur<=end&&dates.length<60){
+      dates.push(cur.toISOString().split('T')[0]);
+      cur=new Date(cur.getFullYear(),cur.getMonth()+1,day);
+    }
+  } else if(pattern==='every_x_days'){
+    const x=parseInt(document.getElementById('rm-x-days').value)||7;
+    while(cur<=end&&dates.length<120){
+      dates.push(cur.toISOString().split('T')[0]);
+      cur=new Date(cur.getTime()+x*86400000);
+    }
+  } else if(pattern==='weekly'){
+    const wd=parseInt(document.getElementById('rm-weekday').value)||1;
+    const diff=(wd-cur.getDay()+7)%7;
+    cur=new Date(cur.getTime()+diff*86400000);
+    while(cur<=end&&dates.length<104){
+      dates.push(cur.toISOString().split('T')[0]);
+      cur=new Date(cur.getTime()+7*86400000);
+    }
+  }
+  return dates;
 }
 
-function getReminderDates(){return[...document.querySelectorAll('#rm-dates-list input[type=date]')].map(i=>i.value).filter(Boolean);}
-function addReminderDate(){renderReminderDates([...getReminderDates(),'']);}
-function removeReminderDate(idx){const d=getReminderDates();d.splice(idx,1);renderReminderDates(d);}
+function getPattern(){
+  const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
+  const obj={pattern,start:document.getElementById('rm-start-date').value,end:document.getElementById('rm-end-date').value};
+  if(pattern==='monthly_day')obj.day=parseInt(document.getElementById('rm-day-of-month').value)||1;
+  if(pattern==='every_x_days')obj.days=parseInt(document.getElementById('rm-x-days').value)||7;
+  if(pattern==='weekly')obj.weekday=parseInt(document.getElementById('rm-weekday').value)||1;
+  return obj;
+}
+
+function previewDates(){
+  const dates=generateDates();
+  const preview=document.getElementById('rm-preview');
+  if(!dates.length){preview.textContent='No dates generated — check your start/end dates.';return;}
+  const fmt=d=>{const[y,m,day]=d.split('-');return`${m}/${day}/${y}`;};
+  const shown=dates.slice(0,5).map(fmt).join(', ');
+  preview.innerHTML=`<strong>${dates.length} dates generated:</strong> ${shown}${dates.length>5?` ... through ${fmt(dates[dates.length-1])}`:''}`;
+}
 
 async function saveReminderModal(){
   if(!rmTaskId)return;
   const reminder=document.getElementById('rm-reminder-on').checked;
   const recurring=document.getElementById('rm-recurring').checked;
-  const recurring_dates=JSON.stringify(recurring?getReminderDates():[]);
+  let recurring_dates='[]';
+  if(recurring){
+    const pattern=getPattern();
+    const dates=generateDates();
+    recurring_dates=JSON.stringify({pattern,dates});
+  }
   const table=rmType==='t'?'tasks':'personal_tasks';
   await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${rmTaskId}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder,recurring,recurring_dates,reminder_sent:false})});
   closeReminderModal();await fetchAll();
@@ -1013,19 +1115,21 @@ async function saveReminderModal(){
 
 async function handleRecurringComplete(task,table){
   if(!task.recurring)return;
-  const dates=JSON.parse(task.recurring_dates||'[]');
+  let saved;
+  try{saved=JSON.parse(task.recurring_dates||'{}');}catch{return;}
+  const dates=saved.dates||[];
   const today=new Date().toISOString().split('T')[0];
   const future=dates.filter(d=>d>today).sort();
   if(!future.length)return;
   const nextDue=future[0];
-  const remaining=dates.filter(d=>d!==nextDue);
+  const remaining={...saved,dates:future.slice(1)};
   const list=table==='tasks'?tItems:ptItems;
   const nextOrder=list.length?Math.max(...list.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:'POST',headers:hdrs,body:JSON.stringify({
     name:task.name,notes:task.notes||null,priority:task.priority,
     category:task.category||'Work',due:nextDue,
     added:new Date().toISOString().split('T')[0],sort_order:nextOrder,
-    reminder:task.reminder,recurring:remaining.length>0,
+    reminder:task.reminder,recurring:future.length>1,
     recurring_dates:JSON.stringify(remaining),reminder_sent:false
   })});
 }
@@ -1055,6 +1159,16 @@ async function confirmMoveToPos(){
   setList(posType,[...list]);renderByType(posType);
   await patchOrder(getTable(posType),list);closePosModal();
 }
+
+function toggleMoveMenu(id,e){
+  e.stopPropagation();
+  const dd=document.getElementById(`move-dd-${id}`);
+  const isOpen=dd.classList.contains('open');
+  closeMoveMenus();
+  if(!isOpen)dd.classList.add('open');
+}
+function closeMoveMenus(){document.querySelectorAll('.move-dropdown').forEach(d=>d.classList.remove('open'));}
+document.addEventListener('click',closeMoveMenus);
 
 async function moveToTop(type,id){
   const list=getList(type);const idx=list.findIndex(i=>i.id===id);
