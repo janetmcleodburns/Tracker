@@ -1026,7 +1026,9 @@ function openReminderModal(id,type){
   // Load saved pattern if exists
   const saved=JSON.parse(task.recurring_dates||'{}');
   if(saved.pattern){
-    document.getElementById('rm-'+saved.pattern.replace('_','-').replace('monthly-day','monthly-day').replace('every-x','every-x'))?.click();
+    const patternIdMap={monthly_day:'rm-monthly-day',every_x_days:'rm-every-x',weekly:'rm-weekly'};
+    const radioEl=document.getElementById(patternIdMap[saved.pattern]);
+    if(radioEl){radioEl.checked=true;}
     if(saved.pattern==='monthly_day')document.getElementById('rm-day-of-month').value=saved.day||1;
     if(saved.pattern==='every_x_days')document.getElementById('rm-x-days').value=saved.days||7;
     if(saved.pattern==='weekly')document.getElementById('rm-weekday').value=saved.weekday||1;
