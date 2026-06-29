@@ -93,6 +93,7 @@
   .move-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
   .move-btn:disabled{opacity:0.2;cursor:default;}
   .edit-form{background:var(--cream);border-radius:10px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .edit-form input,.edit-form textarea,.edit-form select{user-select:text;-webkit-user-select:text;}
   .edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
   .save-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
   .save-btn:hover{background:var(--teal-mid);}
@@ -625,7 +626,7 @@ function renderPCompleted(){
 function makeDraggable(el,id,type){
   el.setAttribute('draggable','true');
   el.dataset.id=id;el.dataset.type=type;
-  el.addEventListener('dragstart',e=>{dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
+  el.addEventListener('dragstart',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)){e.preventDefault();return;}dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
   el.addEventListener('dragend',()=>{el.classList.remove('dragging');document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));});
   el.addEventListener('dragover',e=>{e.preventDefault();if(dragSrc&&dragSrc!==el&&dragType===type)el.classList.add('drag-over');});
   el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
