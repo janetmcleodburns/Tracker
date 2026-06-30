@@ -624,8 +624,12 @@ function renderPCompleted(){
 }
 
 function makeDraggable(el,id,type){
-  el.setAttribute('draggable','true');
   el.dataset.id=id;el.dataset.type=type;
+  const dragHandle=el.querySelector('.drag-handle');
+  if(dragHandle){
+    dragHandle.addEventListener('mousedown',()=>el.setAttribute('draggable','true'));
+    el.addEventListener('dragend',()=>el.removeAttribute('draggable'));
+  }
   el.addEventListener('dragstart',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)){e.preventDefault();return;}dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
   el.addEventListener('dragend',()=>{el.classList.remove('dragging');document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));});
   el.addEventListener('dragover',e=>{e.preventDefault();if(dragSrc&&dragSrc!==el&&dragType===type)el.classList.add('drag-over');});
