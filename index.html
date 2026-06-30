@@ -502,7 +502,7 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <button class="move-btn" onclick="${moveFn}('${type}',${idx},-1)" ${idx===0?'disabled':''}>▲</button>
           <button class="move-btn" onclick="${moveFn}('${type}',${idx},1)" ${idx===total-1?'disabled':''}>▼</button>
           <button class="move-btn" onclick="moveToTop('${type}',${idx})" ${idx===0?'disabled':''} title="Move to top">⤒</button>
-          <input type="number" class="pos-input" min="1" max="${total}" placeholder="#" title="Move to position" onkeydown="if(event.key==='Enter')moveToPosition('${type}',${idx},this)" onblur="if(this.value)moveToPosition('${type}',${idx},this)">
+          <input type="number" class="pos-input" min="1" max="${total}" placeholder="#" title="Type position and press Enter" onkeydown="if(event.key==='Enter'){moveToPosition('${type}',${idx},this.value);this.value='';}">
           ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
           ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
           <span class="badge badge-${i.priority}">${i.priority}</span>
@@ -699,10 +699,9 @@ async function moveToTop(type,idx){
   await patchOrder(getTable(type),list);
 }
 
-async function moveToPosition(type,idx,inputEl){
+async function moveToPosition(type,idx,rawValue){
   const list=getList(type);
-  let pos=parseInt(inputEl.value,10);
-  inputEl.value='';
+  let pos=parseInt(rawValue,10);
   if(isNaN(pos)||pos<1)return;
   pos=Math.min(pos,list.length);
   const newIdx=pos-1;
