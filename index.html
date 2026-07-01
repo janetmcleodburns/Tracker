@@ -660,6 +660,8 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})" title="Move to Personal">→ Personal</button>`:''}
+          ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})" title="Move to Tasks">→ Task</button>`:''}
+          ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})" title="Move to Personal Tasks">→ Task</button>`:''}
           <button class="complete-btn" onclick="${compFn}(${i.id})" title="Mark complete">✓</button>
           <button class="del-btn" onclick="${delFn}(${i.id})" title="Delete">✕</button>
         </div>
@@ -700,6 +702,8 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           <button class="cancel-btn" onclick="toggleEdit(${i.id},'${type}')">Cancel</button>
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})">→ Move to WTHBF</button>`:''}
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})">→ Move to Personal</button>`:''}
+          ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})">→ Move to Task</button>`:''}
+          ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})">→ Move to Task</button>`:''}
         </div>
       </div>
     </div>`;
@@ -898,6 +902,24 @@ async function convertToWthbf(id){
   const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,waiting:task.notes||task.name,priority:task.priority,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
   await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
+}
+
+async function convertToTask(id){
+  const item=wItems.find(i=>i.id===id);
+  if(!item)return;
+  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:cats[0]||'Work',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
+}
+
+async function convertPWtoTask(id){
+  const item=pwItems.find(i=>i.id===id);
+  if(!item)return;
+  const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:'Personal',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
+  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
   await fetchAll();
 }
 
