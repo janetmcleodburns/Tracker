@@ -140,6 +140,7 @@
   .snooze-custom input{width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
   .snooze-custom select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
   .edit-form{background:var(--cream);border-radius:10px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .edit-form input,.edit-form textarea,.edit-form select{user-select:text;-webkit-user-select:text;cursor:text;}
   .edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
   .save-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
   .save-btn:hover{background:var(--teal-mid);}
@@ -662,6 +663,8 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})" title="Move to Personal">→ Personal</button>`:''}
           ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})" title="Move to Tasks">→ Task</button>`:''}
           ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})" title="Move to Personal Tasks">→ Task</button>`:''}
+          ${type==='pw'?`<button class="convert-btn" onclick="convertPWtoWork(${i.id})" title="Move to Work WTHBF">→ Work</button>`:''}
+          ${type==='pt'?`<button class="convert-btn" onclick="convertPTtoWork(${i.id})" title="Move to Work Tasks">→ Work</button>`:''}
           <button class="complete-btn" onclick="${compFn}(${i.id})" title="Mark complete">✓</button>
           <button class="del-btn" onclick="${delFn}(${i.id})" title="Delete">✕</button>
         </div>
@@ -704,6 +707,8 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})">→ Move to Personal</button>`:''}
           ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})">→ Move to Task</button>`:''}
           ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})">→ Move to Task</button>`:''}
+          ${type==='pw'?`<button class="convert-btn" onclick="convertPWtoWork(${i.id})">→ Work</button>`:''}
+          ${type==='pt'?`<button class="convert-btn" onclick="convertPTtoWork(${i.id})">→ Work</button>`:''}
         </div>
       </div>
     </div>`;
@@ -783,10 +788,14 @@ function renderPCompleted(){
 }
 
 function makeDraggable(el,id,type){
-  el.setAttribute('draggable','true');
   el.dataset.id=id;el.dataset.type=type;
-  el.addEventListener('dragstart',e=>{dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
-  el.addEventListener('dragend',()=>{el.classList.remove('dragging');document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));});
+  const dragHandle=el.querySelector('.drag-handle');
+  if(dragHandle){
+    dragHandle.addEventListener('mousedown',()=>el.setAttribute('draggable','true'));
+    dragHandle.addEventListener('touchstart',()=>el.setAttribute('draggable','true'));
+  }
+  el.addEventListener('dragend',()=>{el.removeAttribute('draggable');el.classList.remove('dragging');document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));});
+  el.addEventListener('dragstart',e=>{if(!el.getAttribute('draggable')||['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)){e.preventDefault();return;}dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
   el.addEventListener('dragover',e=>{e.preventDefault();if(dragSrc&&dragSrc!==el&&dragType===type)el.classList.add('drag-over');});
   el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
   el.addEventListener('drop',e=>{
@@ -886,6 +895,24 @@ async function delW(id){await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{met
 async function delT(id){await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
 async function delPW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
 async function delPT(id){await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
+
+async function convertPWtoWork(id){
+  const item=pwItems.find(i=>i.id===id);
+  if(!item)return;
+  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,waiting:item.waiting||null,priority:item.priority,followup:item.followup||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
+  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
+}
+
+async function convertPTtoWork(id){
+  const task=ptItems.find(i=>i.id===id);
+  if(!task)return;
+  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
+  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:cats[0]||'Work',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
+  await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
+  await fetchAll();
+}
 
 async function convertToPersonal(id){
   const task=tItems.find(i=>i.id===id);
