@@ -1,1258 +1,539 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Janet's Tracker</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231565C0'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='Arial' fill='white'>✓</text></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231565C0'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='Arial' fill='white'>✓</text></svg>">
-<meta name="theme-color" content="#1565C0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Janet's Tracker">
-<style>
-  :root {
-    --cream:#FAF8F4;--white:#FFFFFF;--ink:#1C1A17;--ink-mid:#6B6760;--ink-light:#A8A5A0;
-    --border:#E8E4DC;--teal:#1A7F6E;--teal-light:#E8F5F2;--teal-mid:#2FA899;
-    --amber:#C8770A;--amber-light:#FEF4E5;--red:#C0392B;--red-light:#FDECEA;--gold:#E5A820;
-    --purple:#6B3FA0;--purple-light:#F0EBF8;--purple-mid:#8B5CC0;
-    --shadow:0 1px 3px rgba(0,0,0,0.08);--shadow-md:0 4px 12px rgba(0,0,0,0.08);
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.5;}
-  header{background:var(--teal);padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
-  .header-left h1{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.3px;}
-  .header-left p{font-size:13px;color:rgba(255,255,255,0.7);margin-top:2px;}
-  .header-stats{display:flex;gap:0.75rem;flex-wrap:wrap;}
-  .stat{text-align:center;background:rgba(255,255,255,0.12);border-radius:10px;padding:6px 12px;min-width:60px;}
-  .stat-num{font-size:20px;font-weight:700;color:#fff;line-height:1;}
-  .stat-label{font-size:10px;color:rgba(255,255,255,0.7);margin-top:2px;text-transform:uppercase;letter-spacing:0.5px;}
-  .sync-status{font-size:12px;color:rgba(255,255,255,0.8);display:flex;align-items:center;gap:6px;margin-top:4px;}
-  .sync-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;}
-  .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
-  .sync-dot.error{background:#f87171;}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  /* Tab groups */
-  .tab-groups{background:var(--white);border-bottom:1px solid var(--border);}
-  .tab-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:6px 2rem 0;color:var(--ink-light);}
-  .tab-group-label.personal{color:var(--purple);}
-  .tabs{padding:0 2rem;display:flex;gap:0;border-bottom:none;}
-  .tab{font-size:13px;font-weight:500;padding:10px 16px;border:none;background:none;cursor:pointer;color:var(--ink-mid);border-bottom:3px solid transparent;margin-bottom:-1px;transition:color 0.15s;display:flex;align-items:center;gap:6px;}
-  .tab:hover{color:var(--ink);}
-  .tab.active{color:var(--teal);border-bottom-color:var(--teal);}
-  .tab.personal.active{color:var(--purple);border-bottom-color:var(--purple);}
-  .tab-count{font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;background:var(--teal-light);color:var(--teal);}
-  .tab.active .tab-count{background:var(--teal);color:#fff;}
-  .tab.personal.active .tab-count{background:var(--purple);color:#fff;}
-  .tab.personal .tab-count{background:var(--purple-light);color:var(--purple);}
-  main{padding:1.5rem 2rem;max-width:820px;}
-  .pane{display:none;}
-  .pane.active{display:block;}
-  .toolbar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
-  .filter-btn,.cat-filter{font-size:12px;font-weight:500;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--white);cursor:pointer;color:var(--ink-mid);transition:all 0.15s;}
-  .filter-btn:hover,.cat-filter:hover{border-color:var(--teal-mid);color:var(--teal);}
-  .filter-btn.active,.cat-filter.active{background:var(--teal);border-color:var(--teal);color:#fff;}
-  .filter-btn.personal-filter:hover,.cat-filter.personal-filter:hover{border-color:var(--purple-mid);color:var(--purple);}
-  .filter-btn.personal-filter.active,.cat-filter.personal-filter.active{background:var(--purple);border-color:var(--purple);color:#fff;}
-  .card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:10px;box-shadow:var(--shadow);transition:box-shadow 0.15s,opacity 0.15s;position:relative;overflow:hidden;}
-  .card:hover{box-shadow:var(--shadow-md);}
-  .card.dragging{opacity:0.4;}
-  .card.drag-over{border-color:var(--teal-mid);border-style:dashed;}
-  .card-accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;}
-  .card-inner{padding-left:8px;}
-  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
-  .card-name{font-weight:600;font-size:15px;color:var(--ink);}
-  .card-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
-  .card-detail{font-size:14px;color:var(--ink-mid);margin-bottom:8px;display:flex;align-items:flex-start;gap:6px;}
-  .card-meta{display:flex;gap:14px;font-size:12px;color:var(--ink-light);flex-wrap:wrap;}
-  .drag-handle{cursor:grab;color:var(--ink-light);font-size:16px;padding:2px 4px;border-radius:4px;line-height:1;border:none;background:none;flex-shrink:0;}
-  .drag-handle:hover{color:var(--teal);background:var(--teal-light);}
-  .drag-handle:active{cursor:grabbing;}
-  .badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px;}
-  .badge-High{background:var(--red-light);color:var(--red);}
-  .badge-Medium{background:var(--amber-light);color:var(--amber);}
-  .badge-Low{background:#F0F0EE;color:var(--ink-mid);}
-  .cat-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px;background:var(--teal-light);color:var(--teal);}
-  .accent-High{background:var(--red);}
-  .accent-Medium{background:var(--gold);}
-  .accent-Low{background:var(--ink-light);}
-  .accent-overdue{background:var(--red);}
-  .accent-completed{background:var(--ink-light);}
-  .overdue-tag{font-size:11px;font-weight:600;color:var(--red);background:var(--red-light);padding:2px 8px;border-radius:8px;}
-  .del-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:13px;transition:all 0.15s;}
-  .del-btn:hover{background:var(--red-light);color:var(--red);border-color:var(--red);}
-  .complete-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:13px;transition:all 0.15s;}
-  .complete-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .restore-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:12px;transition:all 0.15s;}
-  .restore-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .edit-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:13px;transition:all 0.15s;}
-  .edit-btn:hover{background:var(--amber-light);color:var(--amber);border-color:var(--amber);}
-  .convert-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:12px;transition:all 0.15s;white-space:nowrap;}
-  .convert-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .move-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 6px;font-size:13px;transition:all 0.15s;line-height:1.4;}
-  .move-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .move-btn:disabled{opacity:0.2;cursor:default;}
-  .move-menu-wrap{position:relative;display:inline-block;}
-  .move-menu-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 7px;font-size:12px;transition:all 0.15s;white-space:nowrap;}
-  .move-menu-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
-  .move-dropdown{display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--white);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow-md);z-index:50;min-width:140px;overflow:hidden;}
-  .move-dropdown.open{display:block;}
-  .move-dropdown button{display:block;width:100%;text-align:left;padding:8px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--ink);transition:background 0.12s;}
-  .move-dropdown button:hover{background:var(--teal-light);color:var(--teal);}
-  .move-dropdown hr{border:none;border-top:1px solid var(--border);margin:2px 0;}
-  .reminder-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:#EEF2FF;color:#4F46E5;display:inline-flex;align-items:center;gap:3px;}
-  .recurring-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--teal-light);color:var(--teal);display:inline-flex;align-items:center;gap:3px;}
-  /* REMINDER MODAL */
-  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
-  .modal-overlay.open{display:flex;}
-  .modal-box{background:var(--white);border-radius:14px;padding:1.5rem;width:90%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;}
-  .modal-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px;}
-  .modal-subtitle{font-size:13px;color:var(--ink-mid);margin-bottom:1.25rem;}
-  .modal-section{font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;}
-  .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;}
-  .modal-btn-primary{font-size:14px;padding:8px 22px;border-radius:8px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600;}
-  .modal-btn-primary:hover{background:var(--teal-mid);}
-  .modal-btn-cancel{font-size:14px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--ink-mid);cursor:pointer;}
-  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
-  .toggle-label{font-size:14px;color:var(--ink);}
-  .toggle-sub{font-size:12px;color:var(--ink-light);margin-top:2px;}
-  .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
-  .toggle-switch input{opacity:0;width:0;height:0;}
-  .toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:24px;transition:0.2s;}
-  .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.2s;}
-  input:checked+.toggle-slider{background:var(--teal);}
-  input:checked+.toggle-slider:before{transform:translateX(20px);}
-  .dates-list{display:flex;flex-direction:column;gap:6px;margin:8px 0;}
-  .date-row{display:flex;align-items:center;gap:8px;}
-  .date-row input[type=date]{flex:1;font-size:13px;padding:6px 8px;}
-  .date-row button{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:13px;}
-  .date-row button:hover{color:var(--red);border-color:var(--red);}
-  .add-date-btn{font-size:12px;color:var(--teal);background:none;border:1px dashed var(--teal-mid);border-radius:6px;padding:5px 12px;cursor:pointer;margin-top:4px;}
-  .add-date-btn:hover{background:var(--teal-light);}
-  .snooze-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;}
-  .snooze-modal-overlay.open{display:flex;}
-  .snooze-box{background:var(--white);border-radius:14px;padding:1.5rem;width:90%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
-  .snooze-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:1rem;}
-  .snooze-options{display:flex;flex-direction:column;gap:8px;}
-  .snooze-opt{font-size:14px;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer;text-align:left;color:var(--ink);transition:all 0.15s;}
-  .snooze-opt:hover{background:var(--teal-light);border-color:var(--teal-mid);color:var(--teal);}
-  .snooze-custom{display:flex;gap:8px;align-items:center;margin-top:4px;}
-  .snooze-custom input{width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
-  .snooze-custom select{padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;}
-  .edit-form{background:var(--cream);border-radius:10px;padding:12px;margin-top:10px;display:flex;flex-direction:column;gap:8px;}
-  .edit-form input,.edit-form textarea,.edit-form select{user-select:text;-webkit-user-select:text;cursor:text;}
-  .edit-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
-  .save-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;}
-  .save-btn:hover{background:var(--teal-mid);}
-  .cancel-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;color:var(--ink-mid);transition:all 0.15s;}
-  .cancel-btn:hover{background:var(--red-light);color:var(--red);border-color:var(--red);}
-  .add-panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.25rem 1.5rem;margin-top:1.5rem;box-shadow:var(--shadow);}
-  .add-panel-title{font-size:12px;font-weight:600;color:var(--teal);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.5px;}
-  .add-panel-title.personal{color:var(--purple);}
-  .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-  .form-col{display:flex;flex-direction:column;gap:4px;}
-  .form-label{font-size:11px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.5px;}
-  .required-star{color:var(--red);margin-left:2px;}
-  .field-hint{font-size:11px;color:var(--ink-light);margin-top:2px;}
-  .input-with-mic{position:relative;display:flex;align-items:center;}
-  .input-with-mic input{padding-right:38px;width:100%;}
-  .mic-btn{position:absolute;right:6px;background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:16px;padding:4px;border-radius:6px;transition:all 0.15s;line-height:1;}
-  .mic-btn:hover{color:var(--teal);background:var(--teal-light);}
-  .mic-btn.listening{color:var(--red);animation:pulse 1s infinite;}
-  input[type=text],input[type=date],select{font-size:14px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--cream);color:var(--ink);width:100%;font-family:inherit;outline:none;transition:border-color 0.15s;}
-  input:focus,select:focus{border-color:var(--teal-mid);background:var(--white);}
-  input.required-empty{border-color:var(--red)!important;background:#fff8f8;}
-  .btn-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;}
-  .add-btn{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:14px;font-weight:600;cursor:pointer;transition:background 0.15s;}
-  .add-btn:hover{background:var(--teal-mid);}
-  .add-btn:disabled{opacity:0.6;cursor:not-allowed;}
-  .add-btn.personal{background:var(--purple);}
-  .add-btn.personal:hover{background:var(--purple-mid);}
-  .add-cat-btn{background:none;border:1px dashed var(--teal-mid);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--teal);transition:all 0.15s;}
-  .add-cat-btn:hover{background:var(--teal-light);}
-  .empty{text-align:center;padding:3rem 1rem;color:var(--ink-light);}
-  .empty-icon{font-size:2.5rem;margin-bottom:0.5rem;}
-  .empty p{font-size:14px;}
-  .loading{text-align:center;padding:2rem;color:var(--ink-light);font-size:14px;}
-  .drag-hint{font-size:12px;color:var(--ink-light);margin-bottom:8px;}
-  .card.completed-card{opacity:0.75;}
-  .card.completed-card .card-name{text-decoration:line-through;color:var(--ink-mid);}
-  .cat-manager{background:var(--teal-light);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:none;}
-  .cat-manager.open{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .cat-manager input{max-width:180px;}
-  .cat-manager button{background:var(--teal);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap;}
-  .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--ink-mid);}
-  .cat-tag button{background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:12px;padding:0;line-height:1;}
-  .cat-tag button:hover{color:var(--red);}
-  .section-divider{height:1px;background:var(--border);margin:1.5rem 0;}
-  .personal-section-header{font-size:13px;font-weight:600;color:var(--purple);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.5px;}
-  @media(max-width:600px){
-    header{flex-direction:column;align-items:flex-start;}
-    main{padding:1rem;}
-    .form-grid-2{grid-template-columns:1fr;}
-    .tabs{padding:0 1rem;overflow-x:auto;}
-    .tab-group-label{padding:6px 1rem 0;}
-  }
-  @media(prefers-color-scheme:dark){
-    :root{--cream:#1A1917;--white:#242220;--ink:#F0EDE8;--ink-mid:#A8A5A0;--ink-light:#6B6760;--border:#333130;--teal-light:#0E2F2A;--amber-light:#2A1F0A;--red-light:#2A1212;--purple-light:#2A1F35;}
-    input[type=text],input[type=date],select{background:#1A1917;color:var(--ink);}
-    input:focus,select:focus{background:var(--white);}
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Action Items" />
+  <meta name="theme-color" content="#f5f5f5" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>Action Items</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f5f5; --bg2: #e8e8e8; --bg3: #f0f0f0;
+      --border: #d8d8d8; --border2: #cccccc;
+      --text: #1a1a2e; --text-dim: #888899; --text-mid: #555570; --text-muted: #999aaa;
+      --accent: #4a4a70; --accent2: #8888b0;
+      --red: #e03030; --amber: #cc8800; --green: #008855;
+      --safe-bottom: env(safe-area-inset-bottom, 0px); --safe-top: env(safe-area-inset-top, 0px);
+    }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono','Courier New',monospace; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    #app { min-height: 100dvh; padding-top: calc(var(--safe-top) + 32px); padding-bottom: calc(var(--safe-bottom) + 40px); padding-left: 20px; padding-right: 20px; }
+    .inner { max-width: 580px; margin: 0 auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .eyebrow { font-family: 'Playfair Display',serif; font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); }
+    h1 { font-family: 'Playfair Display',serif; font-size: clamp(28px,8vw,38px); font-weight: 900; letter-spacing: -0.02em; color: var(--text); margin-bottom: 4px; }
+    .subtitle { display: flex; align-items: center; gap: 14px; margin-top: 8px; margin-bottom: 24px; }
+    .subtitle-text { font-size: 12px; color: var(--text-dim); letter-spacing: 0.05em; white-space: nowrap; }
+    .progress-bar { flex: 1; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 1px; transition: width 0.4s ease; }
+
+    /* Add panel */
+    .add-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+    .add-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .add-input {
+      flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px;
+      color: var(--text); font-family: 'DM Mono',monospace; font-size: 15px;
+      padding: 12px 14px; outline: none; transition: border 0.2s; -webkit-appearance: none;
+    }
+    .add-input:focus { border-color: var(--accent); }
+    .add-input::placeholder { color: var(--text-muted); }
+
+    /* Mic button */
+    .mic-btn {
+      background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; cursor: pointer;
+      font-size: 18px; padding: 10px 13px; line-height: 1; transition: all 0.2s; flex-shrink: 0;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .mic-btn:active { background: var(--border2); }
+    .mic-btn.listening { background: #e0303015; border-color: var(--red); animation: pulse 1.2s ease-in-out infinite; }
+    .mic-btn.no-support { opacity: 0.35; cursor: not-allowed; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 #e0303025; } 50% { box-shadow: 0 0 0 7px #e0303008; } }
+    .mic-status { font-size: 11px; color: var(--text-muted); margin-bottom: 8px; text-align: center; min-height: 16px; letter-spacing: 0.05em; }
+    .mic-status.active { color: var(--red); }
+
+    .add-controls { display: grid; grid-template-columns: repeat(3, auto) 1fr auto; align-items: center; gap: 7px; row-gap: 8px; }
+    .add-controls .date-input { grid-column: 1 / 3; width: 100%; max-width: 100%; }
+    .add-controls select.date-input { grid-column: 3 / 5; width: 100%; max-width: 100%; }
+    .add-controls .add-btn { grid-column: 5; }
+    @media (max-width: 420px) {
+      .add-controls { grid-template-columns: 1fr 1fr 1fr; }
+      .add-controls .date-input { grid-column: 1 / 3; }
+      .add-controls select.date-input { grid-column: 3 / 4; }
+      .add-controls .add-btn { grid-column: 1 / 4; margin-left: 0; width: 100%; }
+    }
+    .pill-btn {
+      background: none; border: 1px solid var(--border2); border-radius: 6px; cursor: pointer;
+      font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em;
+      padding: 7px 10px; transition: all 0.15s; text-transform: uppercase; color: var(--text-mid);
+      -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    }
+    .pill-btn.sel-high { background: #e0303018; border-color: var(--red); color: var(--red); }
+    .pill-btn.sel-medium { background: #cc880018; border-color: var(--amber); color: var(--amber); }
+    .pill-btn.sel-low { background: #00885518; border-color: var(--green); color: var(--green); }
+    .date-input {
+      background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px;
+      color: var(--text-mid); font-family: 'DM Mono',monospace; font-size: 11px;
+      padding: 7px 10px; outline: none; transition: border 0.2s; max-width: 130px; -webkit-appearance: none;
+    }
+    .date-input:focus { border-color: var(--accent); }
+    .add-btn {
+      margin-left: auto; background: var(--accent); border: none; border-radius: 6px; cursor: pointer;
+      font-family: 'DM Mono',monospace; font-size: 12px; font-weight: 500;
+      padding: 8px 18px; color: #fff; transition: all 0.15s; letter-spacing: 0.05em; white-space: nowrap;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .add-btn:active { opacity: 0.8; transform: scale(0.97); }
+
+    /* Category manager */
+    .cat-section { margin-bottom: 20px; }
+    .cat-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; cursor: pointer; user-select: none; }
+    .cat-section-title { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-mid); }
+    .cat-toggle { font-size: 11px; color: var(--text-muted); }
+    .cat-manager { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    .cat-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 28px; }
+    .cat-tag { display: inline-flex; align-items: center; gap: 5px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 20px; font-size: 11px; padding: 4px 10px; color: var(--text-mid); }
+    .cat-tag-del { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 12px; line-height: 1; padding: 0; touch-action: manipulation; }
+    .cat-tag-del:active { color: var(--red); }
+    .cat-add-row { display: flex; gap: 7px; }
+    .cat-input { flex: 1; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); font-family: 'DM Mono',monospace; font-size: 13px; padding: 7px 10px; outline: none; transition: border 0.2s; -webkit-appearance: none; }
+    .cat-input:focus { border-color: var(--accent); }
+    .cat-input::placeholder { color: var(--text-muted); }
+    .cat-add-btn { background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 12px; padding: 7px 14px; color: var(--text-mid); touch-action: manipulation; -webkit-tap-highlight-color: transparent; white-space: nowrap; }
+    .cat-add-btn:active { background: var(--border2); }
+
+    /* Filters */
+    .filter-row { display: flex; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+    .filter-btn { background: none; border: none; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 11px; letter-spacing: 0.1em; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; transition: all 0.2s; color: var(--text-muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .filter-btn.active-filter { background: var(--accent); color: #fff; }
+    .filter-count { opacity: 0.7; }
+    .cat-filter-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+    .cat-filter-btn { background: none; border: 1px solid var(--border2); border-radius: 20px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.08em; padding: 4px 11px; transition: all 0.15s; text-transform: uppercase; color: var(--text-muted); touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .cat-filter-btn.active-cat-filter { background: #4a4a7018; border-color: var(--accent); color: var(--accent); }
+
+    hr.rule { border: none; border-top: 1px solid var(--border); margin: 0 0 2px; }
+
+    /* List */
+    .list { padding-top: 2px; }
+    .item-row { display: flex; align-items: flex-start; gap: 10px; padding: 13px 0; border-bottom: 1px solid var(--border); animation: fadeIn 0.22s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+    .priority-dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; margin-top: 6px; }
+    .check-btn { width: 20px; height: 20px; min-width: 20px; border-radius: 5px; margin-top: 1px; border: 1.5px solid var(--border2); background: none; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .check-btn.done-check { background: var(--accent); border-color: var(--accent); }
+    .item-body { flex: 1; min-width: 0; }
+    .item-text { font-size: 14px; line-height: 1.5; word-break: break-word; color: var(--text); }
+    .item-text.done-text { color: var(--text-muted); text-decoration: line-through; }
+    .edit-input { width: 100%; background: var(--bg3); border: 1px solid var(--accent); border-radius: 4px; color: var(--text); font-family: 'DM Mono',monospace; font-size: 14px; padding: 4px 8px; outline: none; }
+    .item-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .due-chip { font-size: 10px; color: var(--text-muted); letter-spacing: 0.05em; }
+    .due-chip.overdue { color: var(--red); }
+    .item-cat-tag { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; background: #4a4a7012; border: 1px solid #4a4a7040; border-radius: 10px; padding: 2px 8px; color: var(--accent); }
+    .item-actions { display: flex; gap: 2px; margin-top: 2px; }
+    .action-btn { background: none; border: none; cursor: pointer; padding: 3px 7px; font-size: 11px; color: var(--text-muted); transition: color 0.15s; font-family: 'DM Mono',monospace; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .action-btn:active { color: var(--text-mid); }
+    .action-btn.del:active { color: var(--red); }
+    .empty-state { text-align: center; padding: 56px 20px; color: var(--border2); font-size: 13px; letter-spacing: 0.05em; }
+    .empty-icon { font-size: 28px; margin-bottom: 10px; opacity: 0.5; }
+
+    /* Replicate modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.15s ease; }
+    .modal { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; width: 100%; max-width: 380px; }
+    .modal-title { font-family: 'Playfair Display',serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .modal-sub { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; letter-spacing: 0.05em; }
+    .modal-task { font-size: 13px; color: var(--text-mid); background: var(--bg2); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; line-height: 1.4; }
+    .modal-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 6px; }
+    .modal-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .modal-cat-btn { background: none; border: 1px solid var(--border2); border-radius: 20px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 11px; padding: 5px 13px; color: var(--text-mid); transition: all 0.15s; touch-action: manipulation; }
+    .modal-cat-btn.selected { background: #4a4a7018; border-color: var(--accent); color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; }
+    .modal-cancel { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 12px; padding: 10px; color: var(--text-mid); touch-action: manipulation; }
+    .modal-confirm { flex: 2; background: var(--accent); border: none; border-radius: 8px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 12px; padding: 10px; color: #fff; touch-action: manipulation; }
+    .modal-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Email button */
+    .email-btn { background: none; border: 1px solid var(--border2); border-radius: 6px; cursor: pointer; font-family: 'DM Mono',monospace; font-size: 11px; letter-spacing: 0.08em; padding: 7px 12px; color: var(--text-mid); transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .email-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .email-btn.sent { border-color: var(--green) !important; color: var(--green) !important; }
+    .email-btn.err { border-color: var(--red) !important; color: var(--red) !important; }
+    .email-btn:not(:disabled):active { background: var(--bg2); }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+    .error-msg { font-size: 11px; color: var(--red); text-align: right; margin-bottom: 6px; }
+  </style>
 </head>
 <body>
-<header>
-  <div class="header-left">
-    <h1>Janet's Tracker</h1>
-    <p>McLeod Real Estate Consulting</p>
-    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Synced ✓</span></div>
-  </div>
-  <div class="header-stats">
-    <div class="stat"><div class="stat-num" id="hdr-wthbf">—</div><div class="stat-label">WTHBF</div></div>
-    <div class="stat"><div class="stat-num" id="hdr-tasks">—</div><div class="stat-label">Tasks</div></div>
-    <div class="stat"><div class="stat-num" id="hdr-personal">—</div><div class="stat-label">Personal</div></div>
-    <div class="stat"><div class="stat-num" id="hdr-overdue">—</div><div class="stat-label">Overdue</div></div>
-  </div>
-</header>
+<div id="app">
+  <div class="inner">
+    <div class="topbar">
+      <span class="eyebrow">Your</span>
+      <button class="email-btn" id="emailBtn" onclick="handleSendEmail()"><span>✉</span> Email to myself</button>
+    </div>
+    <div id="emailError" class="error-msg" style="display:none"></div>
+    <h1>Action Items</h1>
+    <div class="subtitle">
+      <span class="subtitle-text" id="subtitleText">0 remaining · 0 done</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
 
-<div class="tab-groups">
-  <div class="tab-group-label">Work</div>
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('wthbf',this)">⏳ WTHBF <span class="tab-count" id="w-tab-count">—</span></button>
-    <button class="tab" onclick="switchTab('tasks',this)">✅ Tasks <span class="tab-count" id="t-tab-count">—</span></button>
-    <button class="tab" onclick="switchTab('completed',this)">🏆 Completed <span class="tab-count" id="c-tab-count">—</span></button>
-  </div>
-  <div class="tab-group-label personal">Personal</div>
-  <div class="tabs">
-    <button class="tab personal" onclick="switchTab('p-wthbf',this)">⏳ WTHBF <span class="tab-count" id="pw-tab-count">—</span></button>
-    <button class="tab personal" onclick="switchTab('p-tasks',this)">✅ Tasks <span class="tab-count" id="pt-tab-count">—</span></button>
-    <button class="tab personal" onclick="switchTab('p-completed',this)">🏆 Completed <span class="tab-count" id="pc-tab-count">—</span></button>
+    <!-- Add panel -->
+    <div class="add-panel">
+      <div class="add-input-row">
+        <input class="add-input" id="addInput" placeholder="Add an action item…" onkeydown="if(event.key==='Enter')addItem()" />
+        <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Tap to speak">🎤</button>
+      </div>
+      <div class="mic-status" id="micStatus"></div>
+      <div class="add-controls">
+        <button class="pill-btn" id="pb-high" onclick="setPriority('high')">High</button>
+        <button class="pill-btn sel-medium" id="pb-medium" onclick="setPriority('medium')">Med</button>
+        <button class="pill-btn" id="pb-low" onclick="setPriority('low')">Low</button>
+        <input type="date" class="date-input" id="dateInput" />
+        <select class="date-input" id="catSelect" style="max-width:120px;cursor:pointer;">
+          <option value="">Category…</option>
+        </select>
+        <button class="add-btn" onclick="addItem()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Category manager -->
+    <div class="cat-section">
+      <div class="cat-section-header" onclick="toggleCatManager()">
+        <span class="cat-section-title">Categories</span>
+        <span class="cat-toggle" id="catToggleIcon">▸ manage</span>
+      </div>
+      <div id="catManager" style="display:none">
+        <div class="cat-manager">
+          <div class="cat-list" id="catList"></div>
+          <div class="cat-add-row">
+            <input class="cat-input" id="catInput" placeholder="New category…" onkeydown="if(event.key==='Enter')addCategory()" maxlength="30" />
+            <button class="cat-add-btn" onclick="addCategory()">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status filters -->
+    <div class="filter-row">
+      <button class="filter-btn active-filter" id="fb-all" onclick="setFilter('all')">All <span class="filter-count" id="fc-all"></span></button>
+      <button class="filter-btn" id="fb-active" onclick="setFilter('active')">Active <span class="filter-count" id="fc-active"></span></button>
+      <button class="filter-btn" id="fb-done" onclick="setFilter('done')">Done <span class="filter-count" id="fc-done"></span></button>
+    </div>
+    <div class="cat-filter-row" id="catFilterRow"></div>
+    <hr class="rule" />
+    <div class="list" id="list"></div>
   </div>
 </div>
 
-<main>
-  <!-- WORK WTHBF -->
-  <div class="pane active" id="pane-wthbf">
-    <div class="toolbar">
-      <button class="filter-btn active" onclick="setFilter('w','all',this)">All</button>
-      <button class="filter-btn" onclick="setFilter('w','High',this)">High</button>
-      <button class="filter-btn" onclick="setFilter('w','Medium',this)">Medium</button>
-      <button class="filter-btn" onclick="setFilter('w','Low',this)">Low</button>
-      <button class="filter-btn" onclick="setFilter('w','overdue',this)">Overdue</button>
-    </div>
-    <div id="wthbf-list"><div class="loading">Loading...</div></div>
-    <div class="add-panel">
-      <div class="add-panel-title">＋ Add WTHBF item</div>
-      <div class="form-grid-2">
-        <div class="form-col">
-          <label class="form-label">Contact name<span class="required-star">*</span></label>
-          <div class="input-with-mic"><input type="text" id="w-name" placeholder="Required"><button class="mic-btn" onclick="startMic('w-name',this)">🎤</button></div>
-        </div>
-        <div class="form-col"><label class="form-label">Priority</label><select id="w-pri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      </div>
-      <div class="form-col" style="margin-bottom:10px">
-        <label class="form-label">What I'm waiting on<span class="required-star">*</span></label>
-        <div class="input-with-mic"><input type="text" id="w-waiting" placeholder="Required"><button class="mic-btn" onclick="startMic('w-waiting',this)">🎤</button></div>
-        <span class="field-hint">⚠️ Both fields above are required to save</span>
-      </div>
-      <div class="form-grid-2">
-        <div class="form-col"><label class="form-label">Follow-up date</label><input type="date" id="w-followup"></div>
-        <div style="display:flex;align-items:flex-end"><button class="add-btn" id="w-add-btn" onclick="addW()">Add item</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- WORK TASKS -->
-  <div class="pane" id="pane-tasks">
-    <div class="toolbar">
-      <button class="filter-btn active" onclick="setFilter('t','all',this)">All</button>
-      <button class="filter-btn" onclick="setFilter('t','High',this)">High</button>
-      <button class="filter-btn" onclick="setFilter('t','Medium',this)">Medium</button>
-      <button class="filter-btn" onclick="setFilter('t','Low',this)">Low</button>
-      <button class="filter-btn" onclick="setFilter('t','overdue',this)">Overdue</button>
-    </div>
-    <div class="toolbar" id="t-cat-filters"><button class="cat-filter active" onclick="setCatFilter('all',this)">All categories</button></div>
-    <div id="tasks-list"><div class="loading">Loading...</div></div>
-    <div class="add-panel">
-      <div class="add-panel-title">＋ Add task</div>
-      <div class="form-grid-2">
-        <div class="form-col">
-          <label class="form-label">Task<span class="required-star">*</span></label>
-          <div class="input-with-mic"><input type="text" id="t-name" placeholder="Required"><button class="mic-btn" onclick="startMic('t-name',this)">🎤</button></div>
-        </div>
-        <div class="form-col"><label class="form-label">Priority</label><select id="t-pri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      </div>
-      <div class="form-grid-2">
-        <div class="form-col"><label class="form-label">Category</label><select id="t-cat"></select></div>
-        <div class="form-col"><label class="form-label">Due date</label><input type="date" id="t-due"></div>
-      </div>
-      <div class="form-col" style="margin-bottom:12px">
-        <label class="form-label">Notes (optional)</label>
-        <div class="input-with-mic"><input type="text" id="t-notes" placeholder="Any context"><button class="mic-btn" onclick="startMic('t-notes',this)">🎤</button></div>
-      </div>
-      <div class="btn-row">
-        <button class="add-btn" id="t-add-btn" onclick="addT()">Add task</button>
-        <button class="add-cat-btn" onclick="toggleCatManager()">＋ Manage categories</button>
-      </div>
-      <div class="cat-manager" id="cat-manager">
-        <input type="text" id="new-cat-input" placeholder="New category name">
-        <button onclick="addCat()">Add category</button>
-        <div id="cat-tags"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- WORK COMPLETED -->
-  <div class="pane" id="pane-completed">
-    <div class="toolbar">
-      <button class="filter-btn active" onclick="setCompFilter('all',this)">All</button>
-      <button class="filter-btn" onclick="setCompFilter('wthbf',this)">WTHBF</button>
-      <button class="filter-btn" onclick="setCompFilter('tasks',this)">Tasks</button>
-    </div>
-    <div id="completed-list"><div class="loading">Loading...</div></div>
-  </div>
-
-  <!-- PERSONAL WTHBF -->
-  <div class="pane" id="pane-p-wthbf">
-    <div class="toolbar">
-      <button class="filter-btn personal-filter active" onclick="setPFilter('pw','all',this)">All</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pw','High',this)">High</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pw','Medium',this)">Medium</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pw','Low',this)">Low</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pw','overdue',this)">Overdue</button>
-    </div>
-    <div id="p-wthbf-list"><div class="loading">Loading...</div></div>
-    <div class="add-panel">
-      <div class="add-panel-title personal">＋ Add Personal WTHBF</div>
-      <div class="form-grid-2">
-        <div class="form-col">
-          <label class="form-label">Contact name<span class="required-star">*</span></label>
-          <div class="input-with-mic"><input type="text" id="pw-name" placeholder="Required"><button class="mic-btn" onclick="startMic('pw-name',this)">🎤</button></div>
-        </div>
-        <div class="form-col"><label class="form-label">Priority</label><select id="pw-pri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      </div>
-      <div class="form-col" style="margin-bottom:10px">
-        <label class="form-label">What I'm waiting on<span class="required-star">*</span></label>
-        <div class="input-with-mic"><input type="text" id="pw-waiting" placeholder="Required"><button class="mic-btn" onclick="startMic('pw-waiting',this)">🎤</button></div>
-        <span class="field-hint">⚠️ Both fields above are required to save</span>
-      </div>
-      <div class="form-grid-2">
-        <div class="form-col"><label class="form-label">Follow-up date</label><input type="date" id="pw-followup"></div>
-        <div style="display:flex;align-items:flex-end"><button class="add-btn personal" id="pw-add-btn" onclick="addPW()">Add item</button></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PERSONAL TASKS -->
-  <div class="pane" id="pane-p-tasks">
-    <div class="toolbar">
-      <button class="filter-btn personal-filter active" onclick="setPFilter('pt','all',this)">All</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pt','High',this)">High</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pt','Medium',this)">Medium</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pt','Low',this)">Low</button>
-      <button class="filter-btn personal-filter" onclick="setPFilter('pt','overdue',this)">Overdue</button>
-    </div>
-    <div id="p-tasks-list"><div class="loading">Loading...</div></div>
-    <div class="add-panel">
-      <div class="add-panel-title personal">＋ Add Personal Task</div>
-      <div class="form-grid-2">
-        <div class="form-col">
-          <label class="form-label">Task<span class="required-star">*</span></label>
-          <div class="input-with-mic"><input type="text" id="pt-name" placeholder="Required"><button class="mic-btn" onclick="startMic('pt-name',this)">🎤</button></div>
-        </div>
-        <div class="form-col"><label class="form-label">Priority</label><select id="pt-pri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
-      </div>
-      <div class="form-grid-2">
-        <div class="form-col"><label class="form-label">Category</label>
-          <select id="pt-cat"><option>Personal</option><option>Home</option><option>Health</option><option>Family</option><option>Finance</option></select>
-        </div>
-        <div class="form-col"><label class="form-label">Due date</label><input type="date" id="pt-due"></div>
-      </div>
-      <div class="form-col" style="margin-bottom:12px">
-        <label class="form-label">Notes (optional)</label>
-        <div class="input-with-mic"><input type="text" id="pt-notes" placeholder="Any context"><button class="mic-btn" onclick="startMic('pt-notes',this)">🎤</button></div>
-      </div>
-      <div class="btn-row">
-        <button class="add-btn personal" id="pt-add-btn" onclick="addPT()">Add task</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- PERSONAL COMPLETED -->
-  <div class="pane" id="pane-p-completed">
-    <div class="toolbar">
-      <button class="filter-btn personal-filter active" onclick="setPCompFilter('all',this)">All</button>
-      <button class="filter-btn personal-filter" onclick="setPCompFilter('wthbf',this)">WTHBF</button>
-      <button class="filter-btn personal-filter" onclick="setPCompFilter('tasks',this)">Tasks</button>
-    </div>
-    <div id="p-completed-list"><div class="loading">Loading...</div></div>
-  </div>
-</main>
-
-<!-- REMINDER MODAL -->
-<div class="modal-overlay" id="reminder-modal">
-  <div class="modal-box">
-    <div class="modal-title">⏰ Reminder & Recurrence</div>
-    <div class="modal-subtitle" id="reminder-modal-task-name"></div>
-
-    <div class="toggle-row">
-      <div><div class="toggle-label">Send reminder on due date</div><div class="toggle-sub">Email + browser notification</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="rm-reminder-on"><span class="toggle-slider"></span></label>
-    </div>
-
-    <div class="toggle-row">
-      <div><div class="toggle-label">Recurring task</div><div class="toggle-sub">Auto-recreates when completed</div></div>
-      <label class="toggle-switch"><input type="checkbox" id="rm-recurring" onchange="toggleRecurringDates()"><span class="toggle-slider"></span></label>
-    </div>
-
-    <div id="rm-dates-section" style="display:none">
-      <div class="modal-section">Recurrence pattern</div>
-
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
-        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
-          <input type="radio" name="rm-pattern" value="monthly_day" id="rm-monthly-day" onchange="updatePatternUI()" checked />
-          On the <input type="number" id="rm-day-of-month" min="1" max="31" value="1" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;" /> of every month
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
-          <input type="radio" name="rm-pattern" value="every_x_days" id="rm-every-x" onchange="updatePatternUI()" />
-          Every <input type="number" id="rm-x-days" min="1" value="7" style="width:55px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:14px;text-align:center;" /> day(s)
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
-          <input type="radio" name="rm-pattern" value="weekly" id="rm-weekly" onchange="updatePatternUI()" />
-          Every week on
-          <select id="rm-weekday" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;">
-            <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
-            <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
-          </select>
-        </label>
-      </div>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;">
-          <div class="modal-section">Start date</div>
-          <input type="date" id="rm-start-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
-        </div>
-        <div style="flex:1;min-width:140px;">
-          <div class="modal-section">End date</div>
-          <input type="date" id="rm-end-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
-        </div>
-      </div>
-
-      <div id="rm-preview" style="margin-top:10px;font-size:12px;color:var(--ink-mid);background:var(--cream);padding:8px 10px;border-radius:8px;"></div>
-    </div>
-
-    <div class="modal-btns">
-      <button class="modal-btn-cancel" onclick="closeReminderModal()">Cancel</button>
-      <button class="modal-btn-primary" onclick="previewDates()" style="background:var(--amber);">Preview dates</button>
-      <button class="modal-btn-primary" onclick="saveReminderModal()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- MOVE TO POSITION MODAL -->
-<div class="modal-overlay" id="position-modal">
-  <div class="modal-box" style="max-width:320px;">
-    <div class="modal-title">Move to position</div>
-    <div class="modal-subtitle" id="pos-modal-name"></div>
-    <div style="display:flex;align-items:center;gap:10px;margin:1rem 0;">
-      <label style="font-size:14px;color:var(--ink-mid);">Position:</label>
-      <input type="number" id="pos-input" min="1" style="width:80px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:15px;text-align:center;" />
-      <span id="pos-max" style="font-size:13px;color:var(--ink-light);"></span>
-    </div>
-    <div class="modal-btns">
-      <button class="modal-btn-cancel" onclick="closePosModal()">Cancel</button>
-      <button class="modal-btn-primary" onclick="confirmMoveToPos()">Move</button>
-    </div>
-  </div>
-</div>
-
-<!-- SNOOZE MODAL -->
-<div class="snooze-modal-overlay" id="snooze-modal">
-  <div class="snooze-box">
-    <div class="snooze-title">⏳ Remind me again in...</div>
-    <div class="snooze-options">
-      <button class="snooze-opt" onclick="snooze(1,'hours')">1 hour</button>
-      <button class="snooze-opt" onclick="snooze(3,'hours')">3 hours</button>
-      <button class="snooze-opt" onclick="snooze(1,'days')">Tomorrow</button>
-      <button class="snooze-opt" onclick="snooze(3,'days')">In 3 days</button>
-      <button class="snooze-opt" onclick="snooze(7,'days')">In 1 week</button>
-      <div class="snooze-custom">
-        <input type="number" id="snooze-val" min="1" value="1" placeholder="N" />
-        <select id="snooze-unit"><option value="hours">hours</option><option value="days" selected>days</option></select>
-        <button class="snooze-opt" style="padding:6px 12px" onclick="snoozeCustom()">Remind me</button>
-      </div>
-      <button class="snooze-opt" style="color:var(--ink-light)" onclick="closeSnoozeModal()">Dismiss for now</button>
+<!-- Replicate modal -->
+<div class="modal-overlay" id="replicateModal" style="display:none" onclick="closeReplicate(event)">
+  <div class="modal">
+    <div class="modal-title">Replicate Task</div>
+    <div class="modal-sub">Copy this task to another category</div>
+    <div class="modal-task" id="modalTaskText"></div>
+    <div class="modal-label">Choose category</div>
+    <div class="modal-cats" id="modalCats"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeReplicateBtn()">Cancel</button>
+      <button class="modal-confirm" id="modalConfirm" onclick="confirmReplicate()" disabled>Replicate</button>
     </div>
   </div>
 </div>
 
 <script>
-const SUPA_URL='https://egqyhhqtcpssdwolbtvd.supabase.co';
-const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXloaHF0Y3Bzc2R3b2xidHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjE4NjAsImV4cCI6MjA5NjU5Nzg2MH0.AYzOBpIj4RdbLxrKf_IEQOEurbxDVWtKra_jVZrHKPg';
-const hdrs={'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'};
+  const PRIORITY_COLORS = {
+    high:   { dot: '#e03030', shadow: '#e0303044' },
+    medium: { dot: '#cc8800', shadow: '#cc880044' },
+    low:    { dot: '#008855', shadow: '#00885544' },
+  };
 
-let wItems=[],tItems=[],cats=[],wCompleted=[],tCompleted=[];
-let pwItems=[],ptItems=[],pwCompleted=[],ptCompleted=[];
-let wFilter='all',tFilter='all',tCatFilter='all',compFilter='all';
-let pwFilter='all',ptFilter='all',pCompFilter='all';
-let dragSrc=null,dragType=null;
+  let items = [], categories = [];
+  let filter = 'all', catFilter = '', priority = 'medium';
+  let editId = null, catManagerOpen = false;
 
-function setSyncStatus(state,msg){
-  const dot=document.getElementById('sync-dot');
-  dot.className='sync-dot'+(state==='syncing'?' syncing':state==='error'?' error':'');
-  document.getElementById('sync-label').textContent=msg||'Synced ✓';
-}
-
-async function fetchAll(){
-  setSyncStatus('syncing','Loading...');
-  try{
-    const [w,t,c,pw,pt]=await Promise.all([
-      fetch(`${SUPA_URL}/rest/v1/wthbf?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
-      fetch(`${SUPA_URL}/rest/v1/tasks?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
-      fetch(`${SUPA_URL}/rest/v1/categories?select=*&order=name.asc`,{headers:hdrs}).then(r=>r.json()),
-      fetch(`${SUPA_URL}/rest/v1/personal_wthbf?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
-      fetch(`${SUPA_URL}/rest/v1/personal_tasks?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
-    ]);
-    const allW=Array.isArray(w)?w:[];
-    const allT=Array.isArray(t)?t:[];
-    const allPW=Array.isArray(pw)?pw:[];
-    const allPT=Array.isArray(pt)?pt:[];
-    wItems=allW.filter(i=>!i.completed);tItems=allT.filter(i=>!i.completed);
-    wCompleted=allW.filter(i=>i.completed);tCompleted=allT.filter(i=>i.completed);
-    pwItems=allPW.filter(i=>!i.completed);ptItems=allPT.filter(i=>!i.completed);
-    pwCompleted=allPW.filter(i=>i.completed);ptCompleted=allPT.filter(i=>i.completed);
-    cats=Array.isArray(c)?c.map(x=>x.name):['Personal','Home','Work'];
-    setSyncStatus('ok','Synced ✓');
-    renderAll();
-  }catch(e){setSyncStatus('error','Sync error');console.error(e);}
-}
-
-async function patchOrder(table,items){
-  try{await Promise.all(items.map((item,i)=>fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${item.id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({sort_order:i})})));}catch(e){}
-}
-
-function isOD(item){const d=item.followup||item.due;if(!d)return false;return new Date(d)<new Date(new Date().toDateString());}
-function fmt(d){if(!d)return'';const[y,m,day]=d.split('-');return`${m}/${day}/${y}`;}
-
-function updateHeader(){
-  document.getElementById('hdr-wthbf').textContent=wItems.length;
-  document.getElementById('hdr-tasks').textContent=tItems.length;
-  document.getElementById('hdr-personal').textContent=pwItems.length+ptItems.length;
-  document.getElementById('hdr-overdue').textContent=[...wItems,...tItems,...pwItems,...ptItems].filter(isOD).length;
-  document.getElementById('w-tab-count').textContent=wItems.length;
-  document.getElementById('t-tab-count').textContent=tItems.length;
-  document.getElementById('c-tab-count').textContent=wCompleted.length+tCompleted.length;
-  document.getElementById('pw-tab-count').textContent=pwItems.length;
-  document.getElementById('pt-tab-count').textContent=ptItems.length;
-  document.getElementById('pc-tab-count').textContent=pwCompleted.length+ptCompleted.length;
-}
-
-function renderAll(){renderW();renderT();renderCompleted();renderCatFilters();renderCatSelect();renderPW();renderPT();renderPCompleted();updateHeader();}
-
-function switchTab(tab,btn){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-  document.getElementById('pane-'+tab).classList.add('active');
-}
-
-function setFilter(type,f,btn){
-  if(type==='w') wFilter=f; else tFilter=f;
-  const pane=document.getElementById('pane-'+(type==='w'?'wthbf':'tasks'));
-  pane.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(type==='w') renderW(); else renderT();
-}
-
-function setCatFilter(f,btn){
-  tCatFilter=f;
-  document.querySelectorAll('#t-cat-filters .cat-filter').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderT();
-}
-
-function setCompFilter(f,btn){
-  compFilter=f;
-  document.querySelectorAll('#pane-completed .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderCompleted();
-}
-
-function setPFilter(type,f,btn){
-  if(type==='pw') pwFilter=f; else ptFilter=f;
-  const pane=document.getElementById('pane-p-'+(type==='pw'?'wthbf':'tasks'));
-  pane.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(type==='pw') renderPW(); else renderPT();
-}
-
-function setPCompFilter(f,btn){
-  pCompFilter=f;
-  document.querySelectorAll('#pane-p-completed .filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');renderPCompleted();
-}
-
-function renderCatFilters(){
-  const el=document.getElementById('t-cat-filters');
-  el.innerHTML='<button class="cat-filter'+(tCatFilter==='all'?' active':'')+'" onclick="setCatFilter(\'all\',this)">All categories</button>';
-  cats.forEach(c=>{
-    const b=document.createElement('button');
-    b.className='cat-filter'+(tCatFilter===c?' active':'');
-    b.textContent=c;b.onclick=function(){setCatFilter(c,this);};
-    el.appendChild(b);
-  });
-}
-
-function renderCatSelect(){
-  const sel=document.getElementById('t-cat');
-  const cur=sel.value;
-  sel.innerHTML=cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
-}
-
-function renderCatTags(){
-  document.getElementById('cat-tags').innerHTML=cats.map((c,i)=>`<span class="cat-tag">${c}<button onclick="delCat(${i})">✕</button></span>`).join('');
-}
-
-function toggleCatManager(){document.getElementById('cat-manager').classList.toggle('open');renderCatTags();}
-
-async function addCat(){
-  const v=document.getElementById('new-cat-input').value.trim();
-  if(!v||cats.includes(v))return;
-  await fetch(`${SUPA_URL}/rest/v1/categories`,{method:'POST',headers:hdrs,body:JSON.stringify({name:v})});
-  document.getElementById('new-cat-input').value='';
-  await fetchAll();renderCatTags();
-}
-
-async function delCat(i){
-  await fetch(`${SUPA_URL}/rest/v1/categories?name=eq.${encodeURIComponent(cats[i])}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();renderCatTags();
-}
-
-function cardHTML(i,type,idx,total,isPersonal=false){
-  const isW=type==='w'||type==='pw';
-  const delFn=type==='w'?'delW':type==='t'?'delT':type==='pw'?'delPW':'delPT';
-  const compFn=type==='w'?'completeW':type==='t'?'completeT':type==='pw'?'completePW':'completePT';
-  const saveFn=type==='w'?'saveW':type==='t'?'saveT':type==='pw'?'savePW':'savePT';
-  const moveFn='moveItem';
-  return `
-    <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
-    <div class="card-inner">
-      <div class="card-top">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="drag-handle" title="Drag to reorder">⠿</span>
-          <div class="card-name">${i.name}</div>
-        </div>
-        <div class="card-actions">
-          <div class="move-menu-wrap">
-            <button class="move-menu-btn" onclick="toggleMoveMenu('${i.id}',event)">⠿ Move</button>
-            <div class="move-dropdown" id="move-dd-${i.id}">
-              <button onclick="moveItem('${type}',${idx},-1);closeMoveMenus()" ${idx===0?'style="opacity:0.4;pointer-events:none"':''}>▲ Up one</button>
-              <button onclick="moveItem('${type}',${idx},1);closeMoveMenus()" ${idx===total-1?'style="opacity:0.4;pointer-events:none"':''}>▼ Down one</button>
-              <hr/>
-              <button onclick="moveToTop('${type}',${i.id});closeMoveMenus()" ${idx===0?'style="opacity:0.4;pointer-events:none"':''}>⤒ Move to top</button>
-              <button onclick="moveToBottom('${type}',${i.id});closeMoveMenus()" ${idx===total-1?'style="opacity:0.4;pointer-events:none"':''}>⤓ Move to bottom</button>
-              <button onclick="closeMoveMenus();openPosModal('${type}',${i.id})"># Move to position</button>
-            </div>
-          </div>
-          ${isOD(i)?'<span class="overdue-tag">Overdue</span>':''}
-          ${!isW&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
-          <span class="badge badge-${i.priority}">${i.priority}</span>
-          ${!isW&&i.reminder?'<span class="reminder-badge">⏰</span>':''}
-          ${!isW&&i.recurring?'<span class="recurring-badge">🔄</span>':''}
-          ${!isW?`<button class="edit-btn" onclick="openReminderModal(${i.id},'${type}')" title="Reminder & Recurrence">⏰</button>`:''}
-          <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
-          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
-          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})" title="Move to Personal">→ Personal</button>`:''}
-          ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})" title="Move to Tasks">→ Task</button>`:''}
-          ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})" title="Move to Personal Tasks">→ Task</button>`:''}
-          ${type==='pw'?`<button class="convert-btn" onclick="convertPWtoWork(${i.id})" title="Move to Work WTHBF">→ Work</button>`:''}
-          ${type==='pt'?`<button class="convert-btn" onclick="convertPTtoWork(${i.id})" title="Move to Work Tasks">→ Work</button>`:''}
-          <button class="complete-btn" onclick="${compFn}(${i.id})" title="Mark complete">✓</button>
-          <button class="del-btn" onclick="${delFn}(${i.id})" title="Delete">✕</button>
-        </div>
-      </div>
-      <div class="card-detail">${isW?'⏳ '+(i.waiting||''):(i.notes?'📝 '+i.notes:'')}</div>
-      <div class="card-meta">
-        <span>📅 Added ${fmt(i.added)}</span>
-        ${isW&&i.followup?`<span>🔔 Follow up ${fmt(i.followup)}</span>`:''}
-        ${!isW&&i.due?`<span>⚑ Due ${fmt(i.due)}${isOD(i)?' — overdue':''}</span>`:''}
-      </div>
-      <div class="edit-form" id="edit-form-${i.id}" style="display:none">
-        ${isW?`
-        <div class="form-grid-2">
-          <div class="form-col"><label class="form-label">Contact name</label><input type="text" id="ef-name-${i.id}" value="${i.name}"></div>
-          <div class="form-col"><label class="form-label">Priority</label>
-            <select id="ef-pri-${i.id}"><option ${i.priority==='High'?'selected':''}>High</option><option ${i.priority==='Medium'?'selected':''}>Medium</option><option ${i.priority==='Low'?'selected':''}>Low</option></select>
-          </div>
-        </div>
-        <div class="form-col"><label class="form-label">What I'm waiting on</label><input type="text" id="ef-waiting-${i.id}" value="${i.waiting||''}"></div>
-        <div class="form-col"><label class="form-label">Follow-up date</label><input type="date" id="ef-followup-${i.id}" value="${i.followup||''}"></div>
-        `:`
-        <div class="form-grid-2">
-          <div class="form-col"><label class="form-label">Task</label><input type="text" id="ef-name-${i.id}" value="${i.name}"></div>
-          <div class="form-col"><label class="form-label">Priority</label>
-            <select id="ef-pri-${i.id}"><option ${i.priority==='High'?'selected':''}>High</option><option ${i.priority==='Medium'?'selected':''}>Medium</option><option ${i.priority==='Low'?'selected':''}>Low</option></select>
-          </div>
-        </div>
-        <div class="form-grid-2">
-          <div class="form-col"><label class="form-label">Category</label>
-            <select id="ef-cat-${i.id}">${(type==='pt'?['Personal','Home','Health','Family','Finance']:cats).map(c=>`<option ${i.category===c?'selected':''}>${c}</option>`).join('')}</select>
-          </div>
-          <div class="form-col"><label class="form-label">Due date</label><input type="date" id="ef-due-${i.id}" value="${i.due||''}"></div>
-        </div>
-        <div class="form-col"><label class="form-label">Notes</label><input type="text" id="ef-notes-${i.id}" value="${i.notes||''}"></div>
-        `}
-        <div class="edit-row">
-          <button class="save-btn" onclick="${saveFn}(${i.id})">Save</button>
-          <button class="cancel-btn" onclick="toggleEdit(${i.id},'${type}')">Cancel</button>
-          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})">→ Move to WTHBF</button>`:''}
-          ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})">→ Move to Personal</button>`:''}
-          ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})">→ Move to Task</button>`:''}
-          ${isW&&type==='pw'?`<button class="convert-btn" onclick="convertPWtoTask(${i.id})">→ Move to Task</button>`:''}
-          ${type==='pw'?`<button class="convert-btn" onclick="convertPWtoWork(${i.id})">→ Work</button>`:''}
-          ${type==='pt'?`<button class="convert-btn" onclick="convertPTtoWork(${i.id})">→ Work</button>`:''}
-        </div>
-      </div>
-    </div>`;
-}
-
-function renderList(items,elId,type,filter,catFilter){
-  let f=items;
-  if(filter==='overdue') f=items.filter(isOD);
-  else if(filter!=='all') f=items.filter(i=>i.priority===filter);
-  if(catFilter&&catFilter!=='all') f=f.filter(i=>i.category===catFilter);
-  const el=document.getElementById(elId);
-  if(!f.length){el.innerHTML='<div class="empty"><div class="empty-icon">✓</div><p>All clear!</p></div>';return;}
-  el.innerHTML='<div class="drag-hint">⠿ Drag to reorder on desktop · ▲▼ on mobile</div>';
-  f.forEach((i,idx)=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=cardHTML(i,type,idx,f.length);
-    makeDraggable(card,i.id,type);
-    el.appendChild(card);
-  });
-}
-
-function renderW(){renderList(wItems,'wthbf-list','w',wFilter,null);}
-function renderT(){renderList(tItems,'tasks-list','t',tFilter,tCatFilter);}
-function renderPW(){renderList(pwItems,'p-wthbf-list','pw',pwFilter,null);}
-function renderPT(){renderList(ptItems,'p-tasks-list','pt',ptFilter,null);}
-
-function renderCompleted(){
-  let items=[];
-  if(compFilter==='all'||compFilter==='wthbf') wCompleted.forEach(i=>items.push({...i,_type:'w'}));
-  if(compFilter==='all'||compFilter==='tasks') tCompleted.forEach(i=>items.push({...i,_type:'t'}));
-  items.sort((a,b)=>new Date(b.completed_at||b.added)-new Date(a.completed_at||a.added));
-  const el=document.getElementById('completed-list');
-  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>Nothing completed yet!</p></div>';return;}
-  el.innerHTML=items.map(i=>`
-    <div class="card completed-card">
-      <div class="card-accent accent-completed"></div>
-      <div class="card-inner">
-        <div class="card-top">
-          <div><div style="font-size:11px;color:var(--ink-light);margin-bottom:2px">${i._type==='w'?'WTHBF':'TASK'}</div><div class="card-name">${i.name}</div></div>
-          <div class="card-actions">
-            ${i._type==='t'&&i.category?`<span class="cat-badge">${i.category}</span>`:''}
-            <span class="badge badge-${i.priority}">${i.priority}</span>
-            <button class="restore-btn" onclick="${i._type==='w'?'restoreW':'restoreT'}(${i.id})">↩ Restore</button>
-            <button class="del-btn" onclick="${i._type==='w'?'delW':'delT'}(${i.id})">✕</button>
-          </div>
-        </div>
-        <div class="card-detail">${i._type==='w'?'⏳ '+i.waiting:(i.notes?'📝 '+i.notes:'')}</div>
-        <div class="card-meta"><span>📅 Added ${fmt(i.added)}</span>${i.completed_at?`<span>✓ Completed ${fmt(i.completed_at)}</span>`:''}</div>
-      </div>
-    </div>`).join('');
-}
-
-function renderPCompleted(){
-  let items=[];
-  if(pCompFilter==='all'||pCompFilter==='wthbf') pwCompleted.forEach(i=>items.push({...i,_type:'pw'}));
-  if(pCompFilter==='all'||pCompFilter==='tasks') ptCompleted.forEach(i=>items.push({...i,_type:'pt'}));
-  items.sort((a,b)=>new Date(b.completed_at||b.added)-new Date(a.completed_at||a.added));
-  const el=document.getElementById('p-completed-list');
-  if(!items.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏆</div><p>Nothing completed yet!</p></div>';return;}
-  el.innerHTML=items.map(i=>`
-    <div class="card completed-card">
-      <div class="card-accent accent-completed"></div>
-      <div class="card-inner">
-        <div class="card-top">
-          <div><div style="font-size:11px;color:var(--ink-light);margin-bottom:2px">${i._type==='pw'?'WTHBF':'TASK'}</div><div class="card-name">${i.name}</div></div>
-          <div class="card-actions">
-            <span class="badge badge-${i.priority}">${i.priority}</span>
-            <button class="restore-btn" onclick="${i._type==='pw'?'restorePW':'restorePT'}(${i.id})">↩ Restore</button>
-            <button class="del-btn" onclick="${i._type==='pw'?'delPW':'delPT'}(${i.id})">✕</button>
-          </div>
-        </div>
-        <div class="card-detail">${i._type==='pw'?'⏳ '+i.waiting:(i.notes?'📝 '+i.notes:'')}</div>
-        <div class="card-meta"><span>📅 Added ${fmt(i.added)}</span>${i.completed_at?`<span>✓ Completed ${fmt(i.completed_at)}</span>`:''}</div>
-      </div>
-    </div>`).join('');
-}
-
-function makeDraggable(el,id,type){
-  el.dataset.id=id;el.dataset.type=type;
-  const dragHandle=el.querySelector('.drag-handle');
-  if(dragHandle){
-    dragHandle.addEventListener('mousedown',()=>el.setAttribute('draggable','true'));
-    dragHandle.addEventListener('touchstart',()=>el.setAttribute('draggable','true'));
+  // --- Storage ---
+  function load() {
+    try { items = JSON.parse(localStorage.getItem('action-items') || '[]'); } catch { items = []; }
+    try { categories = JSON.parse(localStorage.getItem('action-cats') || '["Work","Personal","Home"]'); } catch { categories = ['Work','Personal','Home']; }
   }
-  el.addEventListener('dragend',()=>{el.removeAttribute('draggable');el.classList.remove('dragging');document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));});
-  el.addEventListener('dragstart',e=>{if(!el.getAttribute('draggable')||['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)){e.preventDefault();return;}dragSrc=el;dragType=type;setTimeout(()=>el.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move';});
-  el.addEventListener('dragover',e=>{e.preventDefault();if(dragSrc&&dragSrc!==el&&dragType===type)el.classList.add('drag-over');});
-  el.addEventListener('dragleave',()=>el.classList.remove('drag-over'));
-  el.addEventListener('drop',e=>{
-    e.preventDefault();el.classList.remove('drag-over');
-    if(!dragSrc||dragSrc===el||dragType!==type)return;
-    const list=getList(type);
-    const fromIdx=list.findIndex(i=>i.id===parseInt(dragSrc.dataset.id));
-    const toIdx=list.findIndex(i=>i.id===parseInt(el.dataset.id));
-    if(fromIdx===-1||toIdx===-1)return;
-    const[moved]=list.splice(fromIdx,1);list.splice(toIdx,0,moved);
-    setList(type,[...list]);renderByType(type);patchOrder(getTable(type),list);
-  });
-  const handle=el.querySelector('.drag-handle');
-  if(handle){
-    let touchEl=null;
-    handle.addEventListener('touchstart',e=>{touchEl=el;dragSrc=el;dragType=type;},{passive:true});
-    handle.addEventListener('touchmove',e=>{
-      e.preventDefault();
-      const y=e.touches[0].clientY,x=e.touches[0].clientX;
-      const els=document.elementsFromPoint(x,y);
-      const target=els.find(x=>x.classList.contains('card')&&x!==touchEl);
-      document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
-      if(target)target.classList.add('drag-over');
-    },{passive:false});
-    handle.addEventListener('touchend',e=>{
-      document.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
-      const y=e.changedTouches[0].clientY,x=e.changedTouches[0].clientX;
-      const els=document.elementsFromPoint(x,y);
-      const target=els.find(x=>x.classList.contains('card')&&x!==touchEl);
-      if(!target){dragSrc=null;return;}
-      const list=getList(type);
-      const fromIdx=list.findIndex(i=>i.id===parseInt(touchEl.dataset.id));
-      const toIdx=list.findIndex(i=>i.id===parseInt(target.dataset.id));
-      if(fromIdx===-1||toIdx===-1){dragSrc=null;return;}
-      const[moved]=list.splice(fromIdx,1);list.splice(toIdx,0,moved);
-      setList(type,[...list]);renderByType(type);patchOrder(getTable(type),list);
-      dragSrc=null;
+  function save() {
+    try {
+      const itemsJson = JSON.stringify(items);
+      localStorage.setItem('action-items', itemsJson);
+    } catch(e) { console.warn('Save failed:', e); }
+    try { localStorage.setItem('action-cats', JSON.stringify(categories)); } catch {}
+  }
+  function generateId() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+  // --- Mic / Speech Recognition ---
+  let recognition = null;
+  let isListening = false;
+
+  function initMic() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const btn = document.getElementById('micBtn');
+    if (!SpeechRecognition) {
+      btn.classList.add('no-support');
+      btn.title = 'Speech recognition not supported in this browser';
+      return;
+    }
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      isListening = true;
+      btn.classList.add('listening');
+      setMicStatus('🔴 Listening… speak your task', true);
+    };
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+      document.getElementById('addInput').value = transcript;
+      if (e.results[e.results.length - 1].isFinal) {
+        setMicStatus('✓ Got it — tap + Add or edit above', false);
+      }
+    };
+    recognition.onerror = (e) => {
+      const msgs = { 'not-allowed': 'Microphone permission denied', 'no-speech': 'No speech detected', 'network': 'Network error' };
+      setMicStatus(msgs[e.error] || 'Error: ' + e.error, false);
+      stopMic();
+    };
+    recognition.onend = () => { stopMic(); };
+  }
+
+  function toggleMic() {
+    if (!recognition) { setMicStatus('Not supported in this browser', false); return; }
+    if (isListening) { recognition.stop(); } else { recognition.start(); }
+  }
+
+  function stopMic() {
+    isListening = false;
+    const btn = document.getElementById('micBtn');
+    btn.classList.remove('listening');
+    setTimeout(() => setMicStatus('', false), 3000);
+  }
+
+  function setMicStatus(msg, active) {
+    const el = document.getElementById('micStatus');
+    el.textContent = msg;
+    el.className = 'mic-status' + (active ? ' active' : '');
+  }
+
+  // --- Priority ---
+  function setPriority(p) {
+    priority = p;
+    ['high','medium','low'].forEach(x => {
+      document.getElementById('pb-' + x).className = 'pill-btn' + (x === p ? ' sel-' + x : '');
     });
   }
-}
 
-function getList(type){return type==='w'?wItems:type==='t'?tItems:type==='pw'?pwItems:ptItems;}
-function setList(type,v){if(type==='w')wItems=v;else if(type==='t')tItems=v;else if(type==='pw')pwItems=v;else ptItems=v;}
-function getTable(type){return type==='w'?'wthbf':type==='t'?'tasks':type==='pw'?'personal_wthbf':'personal_tasks';}
-function renderByType(type){if(type==='w')renderW();else if(type==='t')renderT();else if(type==='pw')renderPW();else renderPT();}
+  // --- Categories ---
+  function toggleCatManager() {
+    catManagerOpen = !catManagerOpen;
+    document.getElementById('catManager').style.display = catManagerOpen ? 'block' : 'none';
+    document.getElementById('catToggleIcon').textContent = catManagerOpen ? '▾ manage' : '▸ manage';
+  }
+  function addCategory() {
+    const input = document.getElementById('catInput');
+    const name = input.value.trim();
+    if (!name || categories.includes(name)) { input.value = ''; return; }
+    categories.push(name); input.value = '';
+    save(); renderCategoryManager(); renderCatFilter(); renderCatSelect();
+  }
+  function deleteCategory(name) {
+    categories = categories.filter(c => c !== name);
+    items.forEach(i => { if (i.category === name) i.category = ''; });
+    if (catFilter === name) catFilter = '';
+    save(); renderCategoryManager(); renderCatFilter(); renderCatSelect(); render();
+  }
+  function renderCategoryManager() {
+    const list = document.getElementById('catList');
+    if (categories.length === 0) { list.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No categories yet.</span>'; return; }
+    list.innerHTML = categories.map(c => `<span class="cat-tag">${escHtml(c)}<button class="cat-tag-del" onclick="deleteCategory('${escHtml(c)}')" title="Delete">✕</button></span>`).join('');
+  }
+  function renderCatSelect() {
+    const sel = document.getElementById('catSelect');
+    const val = sel.value;
+    sel.innerHTML = '<option value="">Category…</option>' + categories.map(c => `<option value="${escHtml(c)}" ${val===c?'selected':''}>${escHtml(c)}</option>`).join('');
+  }
+  function renderCatFilter() {
+    const row = document.getElementById('catFilterRow');
+    if (categories.length === 0) { row.innerHTML = ''; return; }
+    row.innerHTML = categories.map(c => `<button class="cat-filter-btn ${catFilter.trim().toLowerCase()===c.trim().toLowerCase()?'active-cat-filter':''}" onclick="setCatFilter('${escHtml(c)}')">${escHtml(c)}</button>`).join('');
+  }
+  function setCatFilter(c) { catFilter = catFilter.trim().toLowerCase() === c.trim().toLowerCase() ? '' : c.trim(); renderCatFilter(); render(); }
 
-async function moveItem(type,idx,dir){
-  const list=getList(type);
-  const newIdx=idx+dir;
-  if(newIdx<0||newIdx>=list.length)return;
-  const[moved]=list.splice(idx,1);list.splice(newIdx,0,moved);
-  setList(type,[...list]);renderByType(type);
-  await patchOrder(getTable(type),list);
-}
+  // --- Status filter ---
+  function setFilter(f) {
+    filter = f;
+    ['all','active','done'].forEach(x => { document.getElementById('fb-' + x).className = 'filter-btn' + (x===f?' active-filter':''); });
+    render();
+  }
 
-function toggleEdit(id,type){
-  const form=document.getElementById(`edit-form-${id}`);
-  if(form)form.style.display=form.style.display==='none'?'block':'none';
-}
-
-async function saveW(id){
-  const name=document.getElementById(`ef-name-${id}`).value.trim();
-  const waiting=document.getElementById(`ef-waiting-${id}`).value.trim();
-  if(!name||!waiting)return;
-  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({name,waiting,priority:document.getElementById(`ef-pri-${id}`).value,followup:document.getElementById(`ef-followup-${id}`).value||null})});
-  await fetchAll();
-}
-async function saveT(id){
-  const name=document.getElementById(`ef-name-${id}`).value.trim();
-  if(!name)return;
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({name,priority:document.getElementById(`ef-pri-${id}`).value,category:document.getElementById(`ef-cat-${id}`).value,due:document.getElementById(`ef-due-${id}`).value||null,notes:document.getElementById(`ef-notes-${id}`).value.trim()||null})});
-  await fetchAll();
-}
-async function savePW(id){
-  const name=document.getElementById(`ef-name-${id}`).value.trim();
-  const waiting=document.getElementById(`ef-waiting-${id}`).value.trim();
-  if(!name||!waiting)return;
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({name,waiting,priority:document.getElementById(`ef-pri-${id}`).value,followup:document.getElementById(`ef-followup-${id}`).value||null})});
-  await fetchAll();
-}
-async function savePT(id){
-  const name=document.getElementById(`ef-name-${id}`).value.trim();
-  if(!name)return;
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({name,priority:document.getElementById(`ef-pri-${id}`).value,category:document.getElementById(`ef-cat-${id}`).value,due:document.getElementById(`ef-due-${id}`).value||null,notes:document.getElementById(`ef-notes-${id}`).value.trim()||null})});
-  await fetchAll();
-}
-
-async function completeW(id){await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});await fetchAll();}
-async function completeT(id){await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});await fetchAll();}
-async function completePW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});await fetchAll();}
-async function completePT(id){const task=ptItems.find(i=>i.id===id);await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:true,completed_at:new Date().toISOString().split('T')[0]})});if(task?.recurring)await handleRecurringComplete(task,'personal_tasks');await fetchAll();}
-async function restoreW(id){await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});await fetchAll();}
-async function restoreT(id){await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});await fetchAll();}
-async function restorePW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});await fetchAll();}
-async function restorePT(id){await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({completed:false,completed_at:null})});await fetchAll();}
-async function delW(id){await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
-async function delT(id){await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
-async function delPW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
-async function delPT(id){await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
-
-async function convertPWtoWork(id){
-  const item=pwItems.find(i=>i.id===id);
-  if(!item)return;
-  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,waiting:item.waiting||null,priority:item.priority,followup:item.followup||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-async function convertPTtoWork(id){
-  const task=ptItems.find(i=>i.id===id);
-  if(!task)return;
-  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:cats[0]||'Work',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-async function convertToPersonal(id){
-  const task=tItems.find(i=>i.id===id);
-  if(!task)return;
-  const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:'Personal',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-async function convertToWthbf(id){
-  const task=tItems.find(i=>i.id===id);
-  if(!task)return;
-  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,waiting:task.notes||task.name,priority:task.priority,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-async function convertToTask(id){
-  const item=wItems.find(i=>i.id===id);
-  if(!item)return;
-  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:cats[0]||'Work',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-async function convertPWtoTask(id){
-  const item=pwItems.find(i=>i.id===id);
-  if(!item)return;
-  const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:'Personal',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
-}
-
-function validateRequired(fields){
-  let valid=true;
-  fields.forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    if(!el.value.trim()){el.classList.add('required-empty');valid=false;}
-    else el.classList.remove('required-empty');
-  });
-  return valid;
-}
-
-async function addW(){
-  if(!validateRequired(['w-name','w-waiting']))return;
-  const btn=document.getElementById('w-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('w-name').value.trim(),waiting:document.getElementById('w-waiting').value.trim(),priority:document.getElementById('w-pri').value,followup:document.getElementById('w-followup').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  document.getElementById('w-name').value='';document.getElementById('w-waiting').value='';document.getElementById('w-followup').value='';
-  btn.disabled=false;btn.textContent='Add item';await fetchAll();
-}
-
-async function addT(){
-  if(!validateRequired(['t-name']))return;
-  const btn=document.getElementById('t-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('t-name').value.trim(),notes:document.getElementById('t-notes').value.trim()||null,priority:document.getElementById('t-pri').value,category:document.getElementById('t-cat').value,due:document.getElementById('t-due').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  document.getElementById('t-name').value='';document.getElementById('t-notes').value='';document.getElementById('t-due').value='';
-  btn.disabled=false;btn.textContent='Add task';await fetchAll();
-}
-
-async function addPW(){
-  if(!validateRequired(['pw-name','pw-waiting']))return;
-  const btn=document.getElementById('pw-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  const nextOrder=pwItems.length?Math.max(...pwItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('pw-name').value.trim(),waiting:document.getElementById('pw-waiting').value.trim(),priority:document.getElementById('pw-pri').value,followup:document.getElementById('pw-followup').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  document.getElementById('pw-name').value='';document.getElementById('pw-waiting').value='';document.getElementById('pw-followup').value='';
-  btn.disabled=false;btn.textContent='Add item';await fetchAll();
-}
-
-async function addPT(){
-  if(!validateRequired(['pt-name']))return;
-  const btn=document.getElementById('pt-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
-  const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('pt-name').value.trim(),notes:document.getElementById('pt-notes').value.trim()||null,priority:document.getElementById('pt-pri').value,category:document.getElementById('pt-cat').value,due:document.getElementById('pt-due').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  document.getElementById('pt-name').value='';document.getElementById('pt-notes').value='';document.getElementById('pt-due').value='';
-  btn.disabled=false;btn.textContent='Add task';await fetchAll();
-}
-
-let recognition=null;
-function startMic(targetId,btn){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){alert('Voice dictation not supported. Try Chrome or Safari.');return;}
-  if(recognition){recognition.stop();recognition=null;document.querySelectorAll('.mic-btn').forEach(b=>{b.classList.remove('listening');b.textContent='🎤';});return;}
-  recognition=new SR();recognition.continuous=false;recognition.interimResults=false;recognition.lang='en-US';
-  btn.classList.add('listening');btn.textContent='🛑';
-  recognition.onresult=e=>{document.getElementById(targetId).value=e.results[0][0].transcript;recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
-  recognition.onerror=()=>{recognition=null;btn.classList.remove('listening');btn.textContent='🎤';};
-  recognition.onend=()=>{if(recognition){recognition=null;btn.classList.remove('listening');btn.textContent='🎤';}};
-  recognition.start();
-}
-
-// Highlight required fields on input
-['w-name','w-waiting','pw-name','pw-waiting','t-name','pt-name'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el)el.addEventListener('input',()=>el.classList.remove('required-empty'));
-});
-
-fetchAll();
-
-// ── EMAILJS ──────────────────────────────────────────────────────────────
-(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=()=>{emailjs.init({publicKey:'w65eUqIpJs7dhbjNC'});setTimeout(checkReminders,2000);};document.head.appendChild(s);})();
-
-const EMAILJS_SERVICE='service_cen6e1r';
-const EMAILJS_TEMPLATE='template_xjmehjt';
-const OWNER_EMAIL='janetburns@mcleodconsulting.com';
-
-async function sendReminderEmail(taskName,dueDate,isPersonal){
-  try{
-    await emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
-      to_email:OWNER_EMAIL,task_name:taskName,due_date:dueDate,
-      task_type:isPersonal?'Personal Task':'Work Task',
-      message:`Your task "${taskName}" is due today (${dueDate}). Open your tracker to review and mark it complete.`
+  // --- Add / Toggle / Delete / Edit ---
+  function addItem() {
+    const input = document.getElementById('addInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const dueDate = document.getElementById('dateInput').value;
+    const category = document.getElementById('catSelect').value;
+    const newItem = { id: generateId(), text, priority, done: false, dueDate, category, createdAt: Date.now() };
+    items.unshift(newItem);
+    input.value = ''; document.getElementById('dateInput').value = ''; document.getElementById('catSelect').value = '';
+    setMicStatus('', false);
+    save();
+    // Always show all items after adding so new item is always visible
+    filter = 'all';
+    catFilter = '';
+    ['all','active','done'].forEach(x => {
+      document.getElementById('fb-' + x).className = 'filter-btn' + (x === 'all' ? ' active-filter' : '');
     });
-  }catch(e){console.error('Email failed:',e);}
-}
+    renderCatFilter();
+    render();
+    input.focus();
+  }
+  function toggleDone(id) { const item = items.find(i => i.id===id); if (item) { item.done = !item.done; save(); render(); } }
+  function deleteItem(id) { items = items.filter(i => i.id!==id); save(); render(); }
+  function startEdit(id) { editId = id; render(); const inp = document.getElementById('edit-'+id); if (inp) { inp.focus(); inp.select(); } }
+  function saveEdit(id) {
+    const inp = document.getElementById('edit-'+id); if (!inp) return;
+    const text = inp.value.trim();
+    if (text) { const item = items.find(i => i.id===id); if (item) item.text = text; }
+    editId = null; save(); render();
+  }
+  function editKeydown(e, id) { if (e.key==='Enter') saveEdit(id); if (e.key==='Escape') { editId=null; render(); } }
 
-function sendBrowserNotification(taskName,dueDate){
-  if(!('Notification' in window))return;
-  const send=()=>new Notification('📋 Task Due Today',{body:`"${taskName}" is due ${dueDate}`});
-  if(Notification.permission==='granted')send();
-  else if(Notification.permission!=='denied')Notification.requestPermission().then(p=>{if(p==='granted')send();});
-}
+  // --- Render ---
+  function render() {
+    const today = new Date().toISOString().slice(0,10);
+    const pOrder = { high:0, medium:1, low:2 };
+    const all = items.length, doneCount = items.filter(i=>i.done).length, active = all - doneCount;
+    document.getElementById('subtitleText').textContent = `${active} remaining · ${doneCount} done`;
+    document.getElementById('progressFill').style.width = all ? `${(doneCount/all)*100}%` : '0%';
+    document.getElementById('fc-all').textContent = all ? `(${all})` : '';
+    document.getElementById('fc-active').textContent = active ? `(${active})` : '';
+    document.getElementById('fc-done').textContent = doneCount ? `(${doneCount})` : '';
+    const visible = items.filter(i => {
+      const statusOk = filter==='active' ? !i.done : filter==='done' ? i.done : true;
+      const catOk = catFilter ? (i.category||'').trim().toLowerCase() === catFilter.trim().toLowerCase() : true;
+      return statusOk && catOk;
+    }).sort((a,b) => { if (a.done!==b.done) return a.done?1:-1; return pOrder[a.priority]-pOrder[b.priority]; });
+    const list = document.getElementById('list');
+    if (visible.length===0) {
+      const msg = catFilter ? `No ${filter==='done'?'completed':filter==='active'?'active':''} items in "${catFilter}".`
+        : filter==='done' ? 'Nothing completed yet.' : filter==='active' ? 'All clear — nothing pending.' : 'No items yet.';
+      list.innerHTML = `<div class="empty-state"><div class="empty-icon">◇</div><div>${msg}</div></div>`; return;
+    }
+    list.innerHTML = visible.map(item => {
+      const pc = PRIORITY_COLORS[item.priority];
+      const isOverdue = item.dueDate && !item.done && item.dueDate < today;
+      const checkClass = item.done ? 'check-btn done-check' : 'check-btn';
+      const checkmark = item.done ? `<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+      const textContent = editId===item.id
+        ? `<input class="edit-input" id="edit-${item.id}" value="${item.text.replace(/"/g,'&quot;')}" onkeydown="editKeydown(event,'${item.id}')" onblur="saveEdit('${item.id}')" />`
+        : `<div class="item-text ${item.done?'done-text':''}" ondblclick="${!item.done?`startEdit('${item.id}')`:''}"> ${escHtml(item.text)}</div>`;
+      const dueHtml = item.dueDate ? `<span class="due-chip ${isOverdue?'overdue':''}">${isOverdue?'⚠ ':''}Due ${item.dueDate}</span>` : '';
+      const catHtml = item.category ? `<span class="item-cat-tag">${escHtml(item.category)}</span>` : '';
+      const metaHtml = (dueHtml||catHtml) ? `<div class="item-meta">${catHtml}${dueHtml}</div>` : '';
+      const editBtn = !item.done ? `<button class="action-btn" onclick="startEdit('${item.id}')">edit</button>` : '';
+      const replicateBtn = `<button class="action-btn" onclick="openReplicate('${item.id}')" title="Replicate for another category">⧉</button>`;
+      return `<div class="item-row">
+        <div class="priority-dot" style="background:${pc.dot};box-shadow:0 0 5px ${pc.shadow}"></div>
+        <button class="${checkClass}" onclick="toggleDone('${item.id}')">${checkmark}</button>
+        <div class="item-body">${textContent}${metaHtml}</div>
+        <div class="item-actions">${editBtn}${replicateBtn}<button class="action-btn del" onclick="deleteItem('${item.id}')">✕</button></div>
+      </div>`;
+    }).join('');
+  }
 
-async function checkReminders(){
-  const today=new Date().toISOString().split('T')[0];
-  const all=[...tItems.map(i=>({...i,_table:'tasks',_personal:false})),...ptItems.map(i=>({...i,_table:'personal_tasks',_personal:true}))];
-  for(const task of all){
-    if(!task.reminder||!task.due||task.reminder_sent)continue;
-    if(task.due===today){
-      sendBrowserNotification(task.name,task.due);
-      await sendReminderEmail(task.name,task.due,task._personal);
-      await fetch(`${SUPA_URL}/rest/v1/${task._table}?id=eq.${task.id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder_sent:true})});
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // --- Email ---
+  async function handleSendEmail() {
+    const btn = document.getElementById('emailBtn'), errEl = document.getElementById('emailError');
+    if (items.length===0) return;
+    btn.disabled=true; btn.className='email-btn'; btn.innerHTML='<span class="spin">⟳</span> Sending…'; errEl.style.display='none';
+    try {
+      const active=items.filter(i=>!i.done), done=items.filter(i=>i.done);
+      const emoji={high:'🔴',medium:'🟡',low:'🟢'};
+      const fmt=list=>list.map(i=>`  ${emoji[i.priority]} [${i.priority.toUpperCase()}]${i.category?' ['+i.category+']':''} ${i.text}${i.dueDate?' — Due: '+i.dueDate:''}`).join('\n');
+      const today=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      const body=`Action Items Summary — ${today}\n\n📋 ACTIVE (${active.length})\n${'─'.repeat(40)}\n${active.length?fmt(active):'  All clear!'}\n\n`+(done.length?`✅ COMPLETED (${done.length})\n${'─'.repeat(40)}\n${fmt(done)}\n\n`:'')+`─────────────────────────────────────────\nSent from your Action Items app`;
+      const prompt=`You are an email-sending assistant with access to Microsoft 365 Outlook. Send an email to the currently signed-in user (me) with Subject: "Action Items — ${today}" and this plain text body (preserve formatting exactly):\n${body}\n\nUse the Outlook send email tool. Just send it directly.`;
+      const response=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,mcp_servers:[{type:'url',url:'https://microsoft365.mcp.claude.com/mcp',name:'microsoft365'}],messages:[{role:'user',content:prompt}]})});
+      const data=await response.json();
+      if (!response.ok) throw new Error(data.error?.message||'API error');
+      const toolCalls=data.content.filter(b=>b.type==='mcp_tool_use');
+      const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join(' ').toLowerCase();
+      if (toolCalls.length===0&&!text.includes('sent')) throw new Error('Could not send — make sure Microsoft 365 is connected in Claude.');
+      btn.className='email-btn sent'; btn.innerHTML='✓ Sent to Outlook!';
+      setTimeout(()=>{btn.disabled=false;btn.className='email-btn';btn.innerHTML='<span>✉</span> Email to myself';},3000);
+    } catch(e) {
+      btn.className='email-btn err'; btn.innerHTML='✕ Failed'; errEl.textContent=e.message; errEl.style.display='block';
+      setTimeout(()=>{btn.disabled=false;btn.className='email-btn';btn.innerHTML='<span>✉</span> Email to myself';errEl.style.display='none';},6000);
     }
   }
-}
 
-// ── REMINDER MODAL ────────────────────────────────────────────────────────
-let rmTaskId=null,rmType=null;
+  // --- Replicate ---
+  let replicateSourceId = null;
+  let replicateTargetCat = null;
 
-function openReminderModal(id,type){
-  rmTaskId=id;rmType=type;
-  const list=type==='t'?tItems:ptItems;
-  const task=list.find(i=>i.id===id);
-  if(!task)return;
-  document.getElementById('reminder-modal-task-name').textContent=task.name;
-  document.getElementById('rm-reminder-on').checked=!!task.reminder;
-  document.getElementById('rm-recurring').checked=!!task.recurring;
-  document.getElementById('rm-dates-section').style.display=task.recurring?'block':'none';
-
-  // Load saved pattern if exists
-  const saved=JSON.parse(task.recurring_dates||'{}');
-  if(saved.pattern){
-    const patternIdMap={monthly_day:'rm-monthly-day',every_x_days:'rm-every-x',weekly:'rm-weekly'};
-    const radioEl=document.getElementById(patternIdMap[saved.pattern]);
-    if(radioEl){radioEl.checked=true;}
-    if(saved.pattern==='monthly_day')document.getElementById('rm-day-of-month').value=saved.day||1;
-    if(saved.pattern==='every_x_days')document.getElementById('rm-x-days').value=saved.days||7;
-    if(saved.pattern==='weekly')document.getElementById('rm-weekday').value=saved.weekday||1;
-    document.getElementById('rm-start-date').value=saved.start||new Date().toISOString().split('T')[0];
-    document.getElementById('rm-end-date').value=saved.end||'';
-  } else {
-    const today=new Date().toISOString().split('T')[0];
-    document.getElementById('rm-start-date').value=today;
-    document.getElementById('rm-end-date').value='';
-    document.getElementById('rm-monthly-day').checked=true;
-  }
-  document.getElementById('rm-preview').textContent='';
-  document.getElementById('reminder-modal').classList.add('open');
-}
-
-function closeReminderModal(){document.getElementById('reminder-modal').classList.remove('open');}
-function toggleRecurringDates(){document.getElementById('rm-dates-section').style.display=document.getElementById('rm-recurring').checked?'block':'none';}
-function updatePatternUI(){}
-
-function generateDates(){
-  const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
-  const start=new Date(document.getElementById('rm-start-date').value||new Date().toISOString().split('T')[0]);
-  const endVal=document.getElementById('rm-end-date').value;
-  const end=endVal?new Date(endVal):new Date(start.getTime()+365*24*3600000*2);// default 2 years
-  const dates=[];
-  let cur=new Date(start);
-
-  if(pattern==='monthly_day'){
-    const day=parseInt(document.getElementById('rm-day-of-month').value)||1;
-    cur=new Date(start.getFullYear(),start.getMonth(),day);
-    if(cur<start)cur.setMonth(cur.getMonth()+1);
-    while(cur<=end&&dates.length<60){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getFullYear(),cur.getMonth()+1,day);
+  function openReplicate(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    replicateSourceId = id;
+    replicateTargetCat = null;
+    document.getElementById('modalTaskText').textContent = item.text;
+    const catsEl = document.getElementById('modalCats');
+    if (categories.length === 0) {
+      catsEl.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No categories yet — add some first.</span>';
+    } else {
+      catsEl.innerHTML = categories.map(c =>
+        `<button class="modal-cat-btn ${c === item.category ? 'selected' : ''}" onclick="selectReplicateCat('${escHtml(c)}')" id="rcat-${escHtml(c)}">${escHtml(c)}</button>`
+      ).join('');
+      // Pre-select if only one other category exists
+      if (categories.length === 1) selectReplicateCat(categories[0]);
     }
-  } else if(pattern==='every_x_days'){
-    const x=parseInt(document.getElementById('rm-x-days').value)||7;
-    while(cur<=end&&dates.length<120){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getTime()+x*86400000);
-    }
-  } else if(pattern==='weekly'){
-    const wd=parseInt(document.getElementById('rm-weekday').value)||1;
-    const diff=(wd-cur.getDay()+7)%7;
-    cur=new Date(cur.getTime()+diff*86400000);
-    while(cur<=end&&dates.length<104){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getTime()+7*86400000);
-    }
+    document.getElementById('modalConfirm').disabled = true;
+    document.getElementById('replicateModal').style.display = 'flex';
   }
-  return dates;
-}
 
-function getPattern(){
-  const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
-  const obj={pattern,start:document.getElementById('rm-start-date').value,end:document.getElementById('rm-end-date').value};
-  if(pattern==='monthly_day')obj.day=parseInt(document.getElementById('rm-day-of-month').value)||1;
-  if(pattern==='every_x_days')obj.days=parseInt(document.getElementById('rm-x-days').value)||7;
-  if(pattern==='weekly')obj.weekday=parseInt(document.getElementById('rm-weekday').value)||1;
-  return obj;
-}
-
-function previewDates(){
-  const dates=generateDates();
-  const preview=document.getElementById('rm-preview');
-  if(!dates.length){preview.textContent='No dates generated — check your start/end dates.';return;}
-  const fmt=d=>{const[y,m,day]=d.split('-');return`${m}/${day}/${y}`;};
-  const shown=dates.slice(0,5).map(fmt).join(', ');
-  preview.innerHTML=`<strong>${dates.length} dates generated:</strong> ${shown}${dates.length>5?` ... through ${fmt(dates[dates.length-1])}`:''}`;
-}
-
-async function saveReminderModal(){
-  if(!rmTaskId)return;
-  const reminder=document.getElementById('rm-reminder-on').checked;
-  const recurring=document.getElementById('rm-recurring').checked;
-  let recurring_dates='[]';
-  if(recurring){
-    const pattern=getPattern();
-    const dates=generateDates();
-    recurring_dates=JSON.stringify({pattern,dates});
+  function selectReplicateCat(c) {
+    replicateTargetCat = c;
+    document.querySelectorAll('.modal-cat-btn').forEach(btn => btn.classList.remove('selected'));
+    const btn = document.getElementById('rcat-' + c);
+    if (btn) btn.classList.add('selected');
+    document.getElementById('modalConfirm').disabled = false;
   }
-  const table=rmType==='t'?'tasks':'personal_tasks';
-  await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${rmTaskId}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder,recurring,recurring_dates,reminder_sent:false})});
-  closeReminderModal();await fetchAll();
-}
 
-async function handleRecurringComplete(task,table){
-  if(!task.recurring)return;
-  let saved;
-  try{saved=JSON.parse(task.recurring_dates||'{}');}catch{return;}
-  const dates=saved.dates||[];
-  const today=new Date().toISOString().split('T')[0];
-  const future=dates.filter(d=>d>today).sort();
-  if(!future.length)return;
-  const nextDue=future[0];
-  const remaining={...saved,dates:future.slice(1)};
-  const list=table==='tasks'?tItems:ptItems;
-  const nextOrder=list.length?Math.max(...list.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:'POST',headers:hdrs,body:JSON.stringify({
-    name:task.name,notes:task.notes||null,priority:task.priority,
-    category:task.category||'Work',due:nextDue,
-    added:new Date().toISOString().split('T')[0],sort_order:nextOrder,
-    reminder:task.reminder,recurring:future.length>1,
-    recurring_dates:JSON.stringify(remaining),reminder_sent:false
-  })});
-}
+  function confirmReplicate() {
+    if (!replicateSourceId || !replicateTargetCat) return;
+    const source = items.find(i => i.id === replicateSourceId);
+    if (!source) return;
+    const copy = { ...source, id: generateId(), category: replicateTargetCat, done: false, createdAt: Date.now() };
+    items.unshift(copy);
+    save(); render();
+    closeReplicateBtn();
+  }
 
-// ── MOVE TO POSITION MODAL ────────────────────────────────────────────────
-let posType=null,posId=null;
+  function closeReplicate(e) { if (e.target === document.getElementById('replicateModal')) closeReplicateBtn(); }
+  function closeReplicateBtn() {
+    document.getElementById('replicateModal').style.display = 'none';
+    replicateSourceId = null; replicateTargetCat = null;
+  }
 
-function openPosModal(type,id){
-  posType=type;posId=id;
-  const list=getList(type);
-  const task=list.find(i=>i.id===id);
-  document.getElementById('pos-modal-name').textContent=task?.name||'';
-  document.getElementById('pos-input').value=list.findIndex(i=>i.id===id)+1;
-  document.getElementById('pos-max').textContent=`of ${list.length}`;
-  document.getElementById('position-modal').classList.add('open');
-}
-
-function closePosModal(){document.getElementById('position-modal').classList.remove('open');}
-
-async function confirmMoveToPos(){
-  const list=getList(posType);
-  const newPos=parseInt(document.getElementById('pos-input').value)-1;
-  if(isNaN(newPos)||newPos<0||newPos>=list.length){closePosModal();return;}
-  const fromIdx=list.findIndex(i=>i.id===posId);
-  if(fromIdx===-1){closePosModal();return;}
-  const[moved]=list.splice(fromIdx,1);list.splice(newPos,0,moved);
-  setList(posType,[...list]);renderByType(posType);
-  await patchOrder(getTable(posType),list);closePosModal();
-}
-
-function toggleMoveMenu(id,e){
-  e.stopPropagation();
-  const dd=document.getElementById(`move-dd-${id}`);
-  const isOpen=dd.classList.contains('open');
-  closeMoveMenus();
-  if(!isOpen)dd.classList.add('open');
-}
-function closeMoveMenus(){document.querySelectorAll('.move-dropdown').forEach(d=>d.classList.remove('open'));}
-document.addEventListener('click',closeMoveMenus);
-
-async function moveToTop(type,id){
-  const list=getList(type);const idx=list.findIndex(i=>i.id===id);
-  if(idx<=0)return;const[moved]=list.splice(idx,1);list.unshift(moved);
-  setList(type,[...list]);renderByType(type);await patchOrder(getTable(type),list);
-}
-
-async function moveToBottom(type,id){
-  const list=getList(type);const idx=list.findIndex(i=>i.id===id);
-  if(idx===list.length-1)return;const[moved]=list.splice(idx,1);list.push(moved);
-  setList(type,[...list]);renderByType(type);await patchOrder(getTable(type),list);
-}
-
-// ── SNOOZE ────────────────────────────────────────────────────────────────
-let snoozeTaskId=null,snoozeType=null;
-function openSnoozeModal(id,type){snoozeTaskId=id;snoozeType=type;document.getElementById('snooze-modal').classList.add('open');}
-function closeSnoozeModal(){document.getElementById('snooze-modal').classList.remove('open');snoozeTaskId=null;}
-
-async function snooze(val,unit){
-  if(!snoozeTaskId)return;
-  const ms=unit==='hours'?val*3600000:val*86400000;
-  const newDue=new Date(Date.now()+ms).toISOString().split('T')[0];
-  const table=snoozeType==='t'?'tasks':'personal_tasks';
-  await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${snoozeTaskId}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({due:newDue,reminder_sent:false})});
-  closeSnoozeModal();await fetchAll();
-}
-
-async function snoozeCustom(){
-  const val=parseInt(document.getElementById('snooze-val').value)||1;
-  await snooze(val,document.getElementById('snooze-unit').value);
-}
-
-if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+  // --- Init ---
+  window.addEventListener('load', function() {
+    setPriority('medium'); load(); renderCategoryManager(); renderCatFilter(); renderCatSelect(); render(); initMic();
+  });
 </script>
 </body>
 </html>
