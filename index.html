@@ -32,12 +32,11 @@
   .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
   .sync-dot.error{background:#f87171;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-  /* Tab groups */
   .tab-groups{background:var(--white);border-bottom:1px solid var(--border);}
   .tab-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:6px 2rem 0;color:var(--ink-light);}
   .tab-group-label.personal{color:var(--purple);}
-  .tabs{padding:0 2rem;display:flex;gap:0;border-bottom:none;}
-  .tab{font-size:13px;font-weight:500;padding:10px 16px;border:none;background:none;cursor:pointer;color:var(--ink-mid);border-bottom:3px solid transparent;margin-bottom:-1px;transition:color 0.15s;display:flex;align-items:center;gap:6px;}
+  .tabs{padding:0 2rem;display:flex;gap:0;border-bottom:none;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .tab{font-size:13px;font-weight:500;padding:10px 16px;border:none;background:none;cursor:pointer;color:var(--ink-mid);border-bottom:3px solid transparent;margin-bottom:-1px;transition:color 0.15s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
   .tab:hover{color:var(--ink);}
   .tab.active{color:var(--teal);border-bottom-color:var(--teal);}
   .tab.personal.active{color:var(--purple);border-bottom-color:var(--purple);}
@@ -62,7 +61,15 @@
   .card-inner{padding-left:8px;}
   .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
   .card-name{font-weight:600;font-size:15px;color:var(--ink);}
-  .card-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+  /* Mobile-friendly card actions — wrap and never clip */
+  .card-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:100%;}
+  @media(max-width:600px){
+    .card-top{flex-direction:column;gap:10px;}
+    .card-actions{justify-content:flex-start;width:100%;}
+    .card-actions button,.card-actions span{font-size:12px;}
+    .convert-btn{font-size:11px;padding:3px 7px;}
+    .move-menu-btn{font-size:11px;padding:2px 6px;}
+  }
   .card-detail{font-size:14px;color:var(--ink-mid);margin-bottom:8px;display:flex;align-items:flex-start;gap:6px;}
   .card-meta{display:flex;gap:14px;font-size:12px;color:var(--ink-light);flex-wrap:wrap;}
   .drag-handle{cursor:grab;color:var(--ink-light);font-size:16px;padding:2px 4px;border-radius:4px;line-height:1;border:none;background:none;flex-shrink:0;}
@@ -89,6 +96,8 @@
   .edit-btn:hover{background:var(--amber-light);color:var(--amber);border-color:var(--amber);}
   .convert-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:12px;transition:all 0.15s;white-space:nowrap;}
   .convert-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
+  .replicate-btn{background:none;border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--ink-light);padding:4px 8px;font-size:12px;transition:all 0.15s;white-space:nowrap;}
+  .replicate-btn:hover{background:var(--purple-light);color:var(--purple);border-color:var(--purple-mid);}
   .move-btn{background:none;border:1px solid var(--border);border-radius:6px;cursor:pointer;color:var(--ink-light);padding:2px 6px;font-size:13px;transition:all 0.15s;line-height:1.4;}
   .move-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
   .move-btn:disabled{opacity:0.2;cursor:default;}
@@ -102,14 +111,13 @@
   .move-dropdown hr{border:none;border-top:1px solid var(--border);margin:2px 0;}
   .reminder-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:#EEF2FF;color:#4F46E5;display:inline-flex;align-items:center;gap:3px;}
   .recurring-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--teal-light);color:var(--teal);display:inline-flex;align-items:center;gap:3px;}
-  /* REMINDER MODAL */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center;}
   .modal-overlay.open{display:flex;}
   .modal-box{background:var(--white);border-radius:14px;padding:1.5rem;width:90%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;}
   .modal-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px;}
   .modal-subtitle{font-size:13px;color:var(--ink-mid);margin-bottom:1.25rem;}
   .modal-section{font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 6px;}
-  .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;}
+  .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;flex-wrap:wrap;}
   .modal-btn-primary{font-size:14px;padding:8px 22px;border-radius:8px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:600;}
   .modal-btn-primary:hover{background:var(--teal-mid);}
   .modal-btn-cancel{font-size:14px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--ink-mid);cursor:pointer;}
@@ -150,6 +158,7 @@
   .add-panel-title{font-size:12px;font-weight:600;color:var(--teal);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.5px;}
   .add-panel-title.personal{color:var(--purple);}
   .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  @media(max-width:500px){.form-grid-2{grid-template-columns:1fr;}}
   .form-col{display:flex;flex-direction:column;gap:4px;}
   .form-label{font-size:11px;font-weight:600;color:var(--ink-mid);text-transform:uppercase;letter-spacing:0.5px;}
   .required-star{color:var(--red);margin-left:2px;}
@@ -184,12 +193,18 @@
   .cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--white);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--ink-mid);}
   .cat-tag button{background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:12px;padding:0;line-height:1;}
   .cat-tag button:hover{color:var(--red);}
-  .section-divider{height:1px;background:var(--border);margin:1.5rem 0;}
-  .personal-section-header{font-size:13px;font-weight:600;color:var(--purple);margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.5px;}
+  /* Replicate modal */
+  .rep-modal-box{background:var(--white);border-radius:14px;padding:1.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+  .rep-task-preview{font-size:13px;color:var(--ink-mid);background:var(--cream);border-radius:8px;padding:10px 12px;margin-bottom:14px;line-height:1.4;}
+  .rep-cats{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px;}
+  .rep-cat-btn{background:none;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:12px;padding:5px 14px;color:var(--ink-mid);transition:all 0.15s;}
+  .rep-cat-btn.selected{background:var(--purple-light);border-color:var(--purple-mid);color:var(--purple);font-weight:600;}
+  .rep-cat-btn:hover:not(.selected){border-color:var(--teal-mid);color:var(--teal);}
+  .rep-confirm-btn{background:var(--purple);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:14px;font-weight:600;cursor:pointer;}
+  .rep-confirm-btn:disabled{opacity:0.4;cursor:not-allowed;}
   @media(max-width:600px){
     header{flex-direction:column;align-items:flex-start;}
     main{padding:1rem;}
-    .form-grid-2{grid-template-columns:1fr;}
     .tabs{padding:0 1rem;overflow-x:auto;}
     .tab-group-label{padding:6px 1rem 0;}
   }
@@ -231,7 +246,6 @@
 </div>
 
 <main>
-  <!-- WORK WTHBF -->
   <div class="pane active" id="pane-wthbf">
     <div class="toolbar">
       <button class="filter-btn active" onclick="setFilter('w','all',this)">All</button>
@@ -262,7 +276,6 @@
     </div>
   </div>
 
-  <!-- WORK TASKS -->
   <div class="pane" id="pane-tasks">
     <div class="toolbar">
       <button class="filter-btn active" onclick="setFilter('t','all',this)">All</button>
@@ -302,7 +315,6 @@
     </div>
   </div>
 
-  <!-- WORK COMPLETED -->
   <div class="pane" id="pane-completed">
     <div class="toolbar">
       <button class="filter-btn active" onclick="setCompFilter('all',this)">All</button>
@@ -312,7 +324,6 @@
     <div id="completed-list"><div class="loading">Loading...</div></div>
   </div>
 
-  <!-- PERSONAL WTHBF -->
   <div class="pane" id="pane-p-wthbf">
     <div class="toolbar">
       <button class="filter-btn personal-filter active" onclick="setPFilter('pw','all',this)">All</button>
@@ -343,7 +354,6 @@
     </div>
   </div>
 
-  <!-- PERSONAL TASKS -->
   <div class="pane" id="pane-p-tasks">
     <div class="toolbar">
       <button class="filter-btn personal-filter active" onclick="setPFilter('pt','all',this)">All</button>
@@ -378,7 +388,6 @@
     </div>
   </div>
 
-  <!-- PERSONAL COMPLETED -->
   <div class="pane" id="pane-p-completed">
     <div class="toolbar">
       <button class="filter-btn personal-filter active" onclick="setPCompFilter('all',this)">All</button>
@@ -394,20 +403,16 @@
   <div class="modal-box">
     <div class="modal-title">⏰ Reminder & Recurrence</div>
     <div class="modal-subtitle" id="reminder-modal-task-name"></div>
-
     <div class="toggle-row">
       <div><div class="toggle-label">Send reminder on due date</div><div class="toggle-sub">Email + browser notification</div></div>
       <label class="toggle-switch"><input type="checkbox" id="rm-reminder-on"><span class="toggle-slider"></span></label>
     </div>
-
     <div class="toggle-row">
       <div><div class="toggle-label">Recurring task</div><div class="toggle-sub">Auto-recreates when completed</div></div>
       <label class="toggle-switch"><input type="checkbox" id="rm-recurring" onchange="toggleRecurringDates()"><span class="toggle-slider"></span></label>
     </div>
-
     <div id="rm-dates-section" style="display:none">
       <div class="modal-section">Recurrence pattern</div>
-
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;">
         <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;">
           <input type="radio" name="rm-pattern" value="monthly_day" id="rm-monthly-day" onchange="updatePatternUI()" checked />
@@ -426,21 +431,12 @@
           </select>
         </label>
       </div>
-
       <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:140px;">
-          <div class="modal-section">Start date</div>
-          <input type="date" id="rm-start-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
-        </div>
-        <div style="flex:1;min-width:140px;">
-          <div class="modal-section">End date</div>
-          <input type="date" id="rm-end-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" />
-        </div>
+        <div style="flex:1;min-width:140px;"><div class="modal-section">Start date</div><input type="date" id="rm-start-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" /></div>
+        <div style="flex:1;min-width:140px;"><div class="modal-section">End date</div><input type="date" id="rm-end-date" style="width:100%;padding:7px 8px;border:1px solid var(--border);border-radius:8px;font-size:14px;" /></div>
       </div>
-
       <div id="rm-preview" style="margin-top:10px;font-size:12px;color:var(--ink-mid);background:var(--cream);padding:8px 10px;border-radius:8px;"></div>
     </div>
-
     <div class="modal-btns">
       <button class="modal-btn-cancel" onclick="closeReminderModal()">Cancel</button>
       <button class="modal-btn-primary" onclick="previewDates()" style="background:var(--amber);">Preview dates</button>
@@ -486,6 +482,21 @@
   </div>
 </div>
 
+<!-- REPLICATE MODAL -->
+<div class="modal-overlay" id="replicate-modal">
+  <div class="rep-modal-box">
+    <div class="modal-title">⧉ Replicate Task</div>
+    <div class="modal-subtitle">Copy this task to one or more categories</div>
+    <div class="rep-task-preview" id="rep-task-preview"></div>
+    <div class="modal-section">Select categories to copy to</div>
+    <div class="rep-cats" id="rep-cats"></div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" onclick="closeReplicateModal()">Cancel</button>
+      <button class="rep-confirm-btn" id="rep-confirm-btn" onclick="confirmReplicate()" disabled>Replicate</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPA_URL='https://egqyhhqtcpssdwolbtvd.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncXloaHF0Y3Bzc2R3b2xidHZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMjE4NjAsImV4cCI6MjA5NjU5Nzg2MH0.AYzOBpIj4RdbLxrKf_IEQOEurbxDVWtKra_jVZrHKPg';
@@ -513,17 +524,14 @@ async function fetchAll(){
       fetch(`${SUPA_URL}/rest/v1/personal_wthbf?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
       fetch(`${SUPA_URL}/rest/v1/personal_tasks?select=*&order=sort_order.asc,id.asc`,{headers:hdrs}).then(r=>r.json()),
     ]);
-    const allW=Array.isArray(w)?w:[];
-    const allT=Array.isArray(t)?t:[];
-    const allPW=Array.isArray(pw)?pw:[];
-    const allPT=Array.isArray(pt)?pt:[];
+    const allW=Array.isArray(w)?w:[];const allT=Array.isArray(t)?t:[];
+    const allPW=Array.isArray(pw)?pw:[];const allPT=Array.isArray(pt)?pt:[];
     wItems=allW.filter(i=>!i.completed);tItems=allT.filter(i=>!i.completed);
     wCompleted=allW.filter(i=>i.completed);tCompleted=allT.filter(i=>i.completed);
     pwItems=allPW.filter(i=>!i.completed);ptItems=allPT.filter(i=>!i.completed);
     pwCompleted=allPW.filter(i=>i.completed);ptCompleted=allPT.filter(i=>i.completed);
     cats=Array.isArray(c)?c.map(x=>x.name):['Personal','Home','Work'];
-    setSyncStatus('ok','Synced ✓');
-    renderAll();
+    setSyncStatus('ok','Synced ✓');renderAll();
   }catch(e){setSyncStatus('error','Sync error');console.error(e);}
 }
 
@@ -631,7 +639,7 @@ function cardHTML(i,type,idx,total,isPersonal=false){
   const delFn=type==='w'?'delW':type==='t'?'delT':type==='pw'?'delPW':'delPT';
   const compFn=type==='w'?'completeW':type==='t'?'completeT':type==='pw'?'completePW':'completePT';
   const saveFn=type==='w'?'saveW':type==='t'?'saveT':type==='pw'?'savePW':'savePT';
-  const moveFn='moveItem';
+  const showReplicate=type==='t'; // replicate available for work tasks
   return `
     <div class="card-accent ${isOD(i)?'accent-overdue':'accent-'+i.priority}"></div>
     <div class="card-inner">
@@ -659,6 +667,7 @@ function cardHTML(i,type,idx,total,isPersonal=false){
           ${!isW&&i.recurring?'<span class="recurring-badge">🔄</span>':''}
           ${!isW?`<button class="edit-btn" onclick="openReminderModal(${i.id},'${type}')" title="Reminder & Recurrence">⏰</button>`:''}
           <button class="edit-btn" onclick="toggleEdit(${i.id},'${type}')" title="Edit">✎</button>
+          ${showReplicate?`<button class="replicate-btn" onclick="openReplicateModal(${i.id})" title="Replicate for other clients">⧉ Copy</button>`:''}
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToWthbf(${i.id})" title="Move to WTHBF">→ WTHBF</button>`:''}
           ${!isW&&type==='t'?`<button class="convert-btn" onclick="convertToPersonal(${i.id})" title="Move to Personal">→ Personal</button>`:''}
           ${isW&&type==='w'?`<button class="convert-btn" onclick="convertToTask(${i.id})" title="Move to Tasks">→ Task</button>`:''}
@@ -843,12 +852,10 @@ function getTable(type){return type==='w'?'wthbf':type==='t'?'tasks':type==='pw'
 function renderByType(type){if(type==='w')renderW();else if(type==='t')renderT();else if(type==='pw')renderPW();else renderPT();}
 
 async function moveItem(type,idx,dir){
-  const list=getList(type);
-  const newIdx=idx+dir;
+  const list=getList(type);const newIdx=idx+dir;
   if(newIdx<0||newIdx>=list.length)return;
   const[moved]=list.splice(idx,1);list.splice(newIdx,0,moved);
-  setList(type,[...list]);renderByType(type);
-  await patchOrder(getTable(type),list);
+  setList(type,[...list]);renderByType(type);await patchOrder(getTable(type),list);
 }
 
 function toggleEdit(id,type){
@@ -897,104 +904,75 @@ async function delPW(id){await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.$
 async function delPT(id){await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();}
 
 async function convertPWtoWork(id){
-  const item=pwItems.find(i=>i.id===id);
-  if(!item)return;
+  const item=pwItems.find(i=>i.id===id);if(!item)return;
   const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,waiting:item.waiting||null,priority:item.priority,followup:item.followup||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
-
 async function convertPTtoWork(id){
-  const task=ptItems.find(i=>i.id===id);
-  if(!task)return;
+  const task=ptItems.find(i=>i.id===id);if(!task)return;
   const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:cats[0]||'Work',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/personal_tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
-
 async function convertToPersonal(id){
-  const task=tItems.find(i=>i.id===id);
-  if(!task)return;
+  const task=tItems.find(i=>i.id===id);if(!task)return;
   const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:'Personal',due:task.due||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
-
 async function convertToWthbf(id){
-  const task=tItems.find(i=>i.id===id);
-  if(!task)return;
+  const task=tItems.find(i=>i.id===id);if(!task)return;
   const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,waiting:task.notes||task.name,priority:task.priority,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/tasks?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
-
 async function convertToTask(id){
-  const item=wItems.find(i=>i.id===id);
-  if(!item)return;
+  const item=wItems.find(i=>i.id===id);if(!item)return;
   const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:cats[0]||'Work',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
-
 async function convertPWtoTask(id){
-  const item=pwItems.find(i=>i.id===id);
-  if(!item)return;
+  const item=pwItems.find(i=>i.id===id);if(!item)return;
   const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:item.name,notes:item.waiting||null,priority:item.priority,category:'Personal',added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
-  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});
-  await fetchAll();
+  await fetch(`${SUPA_URL}/rest/v1/personal_wthbf?id=eq.${id}`,{method:'DELETE',headers:hdrs});await fetchAll();
 }
 
 function validateRequired(fields){
   let valid=true;
-  fields.forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el)return;
-    if(!el.value.trim()){el.classList.add('required-empty');valid=false;}
-    else el.classList.remove('required-empty');
-  });
+  fields.forEach(id=>{const el=document.getElementById(id);if(!el)return;if(!el.value.trim()){el.classList.add('required-empty');valid=false;}else el.classList.remove('required-empty');});
   return valid;
 }
 
 async function addW(){
   if(!validateRequired(['w-name','w-waiting']))return;
-  const btn=document.getElementById('w-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+  const btn=document.getElementById('w-add-btn');btn.disabled=true;btn.textContent='Saving...';
   const nextOrder=wItems.length?Math.max(...wItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('w-name').value.trim(),waiting:document.getElementById('w-waiting').value.trim(),priority:document.getElementById('w-pri').value,followup:document.getElementById('w-followup').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
   document.getElementById('w-name').value='';document.getElementById('w-waiting').value='';document.getElementById('w-followup').value='';
   btn.disabled=false;btn.textContent='Add item';await fetchAll();
 }
-
 async function addT(){
   if(!validateRequired(['t-name']))return;
-  const btn=document.getElementById('t-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+  const btn=document.getElementById('t-add-btn');btn.disabled=true;btn.textContent='Saving...';
   const nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('t-name').value.trim(),notes:document.getElementById('t-notes').value.trim()||null,priority:document.getElementById('t-pri').value,category:document.getElementById('t-cat').value,due:document.getElementById('t-due').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
   document.getElementById('t-name').value='';document.getElementById('t-notes').value='';document.getElementById('t-due').value='';
   btn.disabled=false;btn.textContent='Add task';await fetchAll();
 }
-
 async function addPW(){
   if(!validateRequired(['pw-name','pw-waiting']))return;
-  const btn=document.getElementById('pw-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+  const btn=document.getElementById('pw-add-btn');btn.disabled=true;btn.textContent='Saving...';
   const nextOrder=pwItems.length?Math.max(...pwItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/personal_wthbf`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('pw-name').value.trim(),waiting:document.getElementById('pw-waiting').value.trim(),priority:document.getElementById('pw-pri').value,followup:document.getElementById('pw-followup').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
   document.getElementById('pw-name').value='';document.getElementById('pw-waiting').value='';document.getElementById('pw-followup').value='';
   btn.disabled=false;btn.textContent='Add item';await fetchAll();
 }
-
 async function addPT(){
   if(!validateRequired(['pt-name']))return;
-  const btn=document.getElementById('pt-add-btn');
-  btn.disabled=true;btn.textContent='Saving...';
+  const btn=document.getElementById('pt-add-btn');btn.disabled=true;btn.textContent='Saving...';
   const nextOrder=ptItems.length?Math.max(...ptItems.map(i=>i.sort_order||0))+1:0;
   await fetch(`${SUPA_URL}/rest/v1/personal_tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({name:document.getElementById('pt-name').value.trim(),notes:document.getElementById('pt-notes').value.trim()||null,priority:document.getElementById('pt-pri').value,category:document.getElementById('pt-cat').value,due:document.getElementById('pt-due').value||null,added:new Date().toISOString().split('T')[0],sort_order:nextOrder})});
   document.getElementById('pt-name').value='';document.getElementById('pt-notes').value='';document.getElementById('pt-due').value='';
@@ -1014,7 +992,6 @@ function startMic(targetId,btn){
   recognition.start();
 }
 
-// Highlight required fields on input
 ['w-name','w-waiting','pw-name','pw-waiting','t-name','pt-name'].forEach(id=>{
   const el=document.getElementById(id);
   if(el)el.addEventListener('input',()=>el.classList.remove('required-empty'));
@@ -1024,113 +1001,80 @@ fetchAll();
 
 // ── EMAILJS ──────────────────────────────────────────────────────────────
 (function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=()=>{emailjs.init({publicKey:'w65eUqIpJs7dhbjNC'});setTimeout(checkReminders,2000);};document.head.appendChild(s);})();
-
 const EMAILJS_SERVICE='service_cen6e1r';
 const EMAILJS_TEMPLATE='template_xjmehjt';
 const OWNER_EMAIL='janetburns@mcleodconsulting.com';
 
 async function sendReminderEmail(taskName,dueDate,isPersonal){
-  try{
-    await emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{
-      to_email:OWNER_EMAIL,task_name:taskName,due_date:dueDate,
-      task_type:isPersonal?'Personal Task':'Work Task',
-      message:`Your task "${taskName}" is due today (${dueDate}). Open your tracker to review and mark it complete.`
-    });
-  }catch(e){console.error('Email failed:',e);}
+  try{await emailjs.send(EMAILJS_SERVICE,EMAILJS_TEMPLATE,{to_email:OWNER_EMAIL,task_name:taskName,due_date:dueDate,task_type:isPersonal?'Personal Task':'Work Task',message:`Your task "${taskName}" is due today (${dueDate}). Open your tracker to review and mark it complete.`});}catch(e){console.error('Email failed:',e);}
 }
-
 function sendBrowserNotification(taskName,dueDate){
   if(!('Notification' in window))return;
   const send=()=>new Notification('📋 Task Due Today',{body:`"${taskName}" is due ${dueDate}`});
   if(Notification.permission==='granted')send();
   else if(Notification.permission!=='denied')Notification.requestPermission().then(p=>{if(p==='granted')send();});
 }
-
 async function checkReminders(){
   const today=new Date().toISOString().split('T')[0];
   const all=[...tItems.map(i=>({...i,_table:'tasks',_personal:false})),...ptItems.map(i=>({...i,_table:'personal_tasks',_personal:true}))];
   for(const task of all){
     if(!task.reminder||!task.due||task.reminder_sent)continue;
-    if(task.due===today){
-      sendBrowserNotification(task.name,task.due);
-      await sendReminderEmail(task.name,task.due,task._personal);
-      await fetch(`${SUPA_URL}/rest/v1/${task._table}?id=eq.${task.id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder_sent:true})});
-    }
+    if(task.due===today){sendBrowserNotification(task.name,task.due);await sendReminderEmail(task.name,task.due,task._personal);await fetch(`${SUPA_URL}/rest/v1/${task._table}?id=eq.${task.id}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder_sent:true})});}
   }
 }
 
 // ── REMINDER MODAL ────────────────────────────────────────────────────────
 let rmTaskId=null,rmType=null;
-
 function openReminderModal(id,type){
   rmTaskId=id;rmType=type;
   const list=type==='t'?tItems:ptItems;
-  const task=list.find(i=>i.id===id);
-  if(!task)return;
+  const task=list.find(i=>i.id===id);if(!task)return;
   document.getElementById('reminder-modal-task-name').textContent=task.name;
   document.getElementById('rm-reminder-on').checked=!!task.reminder;
   document.getElementById('rm-recurring').checked=!!task.recurring;
   document.getElementById('rm-dates-section').style.display=task.recurring?'block':'none';
-
-  // Load saved pattern if exists
   const saved=JSON.parse(task.recurring_dates||'{}');
   if(saved.pattern){
     const patternIdMap={monthly_day:'rm-monthly-day',every_x_days:'rm-every-x',weekly:'rm-weekly'};
     const radioEl=document.getElementById(patternIdMap[saved.pattern]);
-    if(radioEl){radioEl.checked=true;}
+    if(radioEl)radioEl.checked=true;
     if(saved.pattern==='monthly_day')document.getElementById('rm-day-of-month').value=saved.day||1;
     if(saved.pattern==='every_x_days')document.getElementById('rm-x-days').value=saved.days||7;
     if(saved.pattern==='weekly')document.getElementById('rm-weekday').value=saved.weekday||1;
     document.getElementById('rm-start-date').value=saved.start||new Date().toISOString().split('T')[0];
     document.getElementById('rm-end-date').value=saved.end||'';
   } else {
-    const today=new Date().toISOString().split('T')[0];
-    document.getElementById('rm-start-date').value=today;
+    document.getElementById('rm-start-date').value=new Date().toISOString().split('T')[0];
     document.getElementById('rm-end-date').value='';
     document.getElementById('rm-monthly-day').checked=true;
   }
   document.getElementById('rm-preview').textContent='';
   document.getElementById('reminder-modal').classList.add('open');
 }
-
 function closeReminderModal(){document.getElementById('reminder-modal').classList.remove('open');}
 function toggleRecurringDates(){document.getElementById('rm-dates-section').style.display=document.getElementById('rm-recurring').checked?'block':'none';}
 function updatePatternUI(){}
-
 function generateDates(){
   const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
   const start=new Date(document.getElementById('rm-start-date').value||new Date().toISOString().split('T')[0]);
   const endVal=document.getElementById('rm-end-date').value;
-  const end=endVal?new Date(endVal):new Date(start.getTime()+365*24*3600000*2);// default 2 years
-  const dates=[];
-  let cur=new Date(start);
-
+  const end=endVal?new Date(endVal):new Date(start.getTime()+365*24*3600000*2);
+  const dates=[];let cur=new Date(start);
   if(pattern==='monthly_day'){
     const day=parseInt(document.getElementById('rm-day-of-month').value)||1;
     cur=new Date(start.getFullYear(),start.getMonth(),day);
     if(cur<start)cur.setMonth(cur.getMonth()+1);
-    while(cur<=end&&dates.length<60){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getFullYear(),cur.getMonth()+1,day);
-    }
+    while(cur<=end&&dates.length<60){dates.push(cur.toISOString().split('T')[0]);cur=new Date(cur.getFullYear(),cur.getMonth()+1,day);}
   } else if(pattern==='every_x_days'){
     const x=parseInt(document.getElementById('rm-x-days').value)||7;
-    while(cur<=end&&dates.length<120){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getTime()+x*86400000);
-    }
+    while(cur<=end&&dates.length<120){dates.push(cur.toISOString().split('T')[0]);cur=new Date(cur.getTime()+x*86400000);}
   } else if(pattern==='weekly'){
     const wd=parseInt(document.getElementById('rm-weekday').value)||1;
-    const diff=(wd-cur.getDay()+7)%7;
-    cur=new Date(cur.getTime()+diff*86400000);
-    while(cur<=end&&dates.length<104){
-      dates.push(cur.toISOString().split('T')[0]);
-      cur=new Date(cur.getTime()+7*86400000);
-    }
+    const diff=(wd-cur.getDay()+7)%7;cur=new Date(cur.getTime()+diff*86400000);
+    while(cur<=end&&dates.length<104){dates.push(cur.toISOString().split('T')[0]);cur=new Date(cur.getTime()+7*86400000);}
   }
   return dates;
 }
-
 function getPattern(){
   const pattern=document.querySelector('input[name="rm-pattern"]:checked')?.value||'monthly_day';
   const obj={pattern,start:document.getElementById('rm-start-date').value,end:document.getElementById('rm-end-date').value};
@@ -1139,84 +1083,104 @@ function getPattern(){
   if(pattern==='weekly')obj.weekday=parseInt(document.getElementById('rm-weekday').value)||1;
   return obj;
 }
-
 function previewDates(){
-  const dates=generateDates();
-  const preview=document.getElementById('rm-preview');
+  const dates=generateDates();const preview=document.getElementById('rm-preview');
   if(!dates.length){preview.textContent='No dates generated — check your start/end dates.';return;}
-  const fmt=d=>{const[y,m,day]=d.split('-');return`${m}/${day}/${y}`;};
-  const shown=dates.slice(0,5).map(fmt).join(', ');
-  preview.innerHTML=`<strong>${dates.length} dates generated:</strong> ${shown}${dates.length>5?` ... through ${fmt(dates[dates.length-1])}`:''}`;
+  const fmtD=d=>{const[y,m,day]=d.split('-');return`${m}/${day}/${y}`;};
+  const shown=dates.slice(0,5).map(fmtD).join(', ');
+  preview.innerHTML=`<strong>${dates.length} dates generated:</strong> ${shown}${dates.length>5?` ... through ${fmtD(dates[dates.length-1])}`:''}`;
 }
-
 async function saveReminderModal(){
   if(!rmTaskId)return;
   const reminder=document.getElementById('rm-reminder-on').checked;
   const recurring=document.getElementById('rm-recurring').checked;
   let recurring_dates='[]';
-  if(recurring){
-    const pattern=getPattern();
-    const dates=generateDates();
-    recurring_dates=JSON.stringify({pattern,dates});
-  }
+  if(recurring){const pattern=getPattern();const dates=generateDates();recurring_dates=JSON.stringify({pattern,dates});}
   const table=rmType==='t'?'tasks':'personal_tasks';
   await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${rmTaskId}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({reminder,recurring,recurring_dates,reminder_sent:false})});
   closeReminderModal();await fetchAll();
 }
-
 async function handleRecurringComplete(task,table){
   if(!task.recurring)return;
-  let saved;
-  try{saved=JSON.parse(task.recurring_dates||'{}');}catch{return;}
-  const dates=saved.dates||[];
-  const today=new Date().toISOString().split('T')[0];
-  const future=dates.filter(d=>d>today).sort();
-  if(!future.length)return;
-  const nextDue=future[0];
-  const remaining={...saved,dates:future.slice(1)};
+  let saved;try{saved=JSON.parse(task.recurring_dates||'{}');}catch{return;}
+  const dates=saved.dates||[];const today=new Date().toISOString().split('T')[0];
+  const future=dates.filter(d=>d>today).sort();if(!future.length)return;
+  const nextDue=future[0];const remaining={...saved,dates:future.slice(1)};
   const list=table==='tasks'?tItems:ptItems;
   const nextOrder=list.length?Math.max(...list.map(i=>i.sort_order||0))+1:0;
-  await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:'POST',headers:hdrs,body:JSON.stringify({
-    name:task.name,notes:task.notes||null,priority:task.priority,
-    category:task.category||'Work',due:nextDue,
-    added:new Date().toISOString().split('T')[0],sort_order:nextOrder,
-    reminder:task.reminder,recurring:future.length>1,
-    recurring_dates:JSON.stringify(remaining),reminder_sent:false
-  })});
+  await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:'POST',headers:hdrs,body:JSON.stringify({name:task.name,notes:task.notes||null,priority:task.priority,category:task.category||'Work',due:nextDue,added:new Date().toISOString().split('T')[0],sort_order:nextOrder,reminder:task.reminder,recurring:future.length>1,recurring_dates:JSON.stringify(remaining),reminder_sent:false})});
+}
+
+// ── REPLICATE MODAL ───────────────────────────────────────────────────────
+let repTaskId=null,repSelectedCats=new Set();
+
+function openReplicateModal(id){
+  const task=tItems.find(i=>i.id===id);if(!task)return;
+  repTaskId=id;repSelectedCats=new Set();
+  document.getElementById('rep-task-preview').textContent=task.name+(task.notes?' — '+task.notes:'');
+  const catsEl=document.getElementById('rep-cats');
+  // Show all cats except the task's current one
+  const available=cats.filter(c=>c!==task.category);
+  if(!available.length){
+    catsEl.innerHTML='<span style="font-size:13px;color:var(--ink-light)">No other categories — add more via Manage categories.</span>';
+  } else {
+    catsEl.innerHTML=available.map(c=>`<button class="rep-cat-btn" onclick="toggleRepCat('${c}',this)">${c}</button>`).join('');
+  }
+  document.getElementById('rep-confirm-btn').disabled=true;
+  document.getElementById('replicate-modal').classList.add('open');
+}
+
+function toggleRepCat(c,btn){
+  if(repSelectedCats.has(c)){repSelectedCats.delete(c);btn.classList.remove('selected');}
+  else{repSelectedCats.add(c);btn.classList.add('selected');}
+  document.getElementById('rep-confirm-btn').disabled=repSelectedCats.size===0;
+}
+
+async function confirmReplicate(){
+  if(!repTaskId||repSelectedCats.size===0)return;
+  const source=tItems.find(i=>i.id===repTaskId);if(!source)return;
+  const btn=document.getElementById('rep-confirm-btn');
+  btn.disabled=true;btn.textContent='Saving...';
+  let nextOrder=tItems.length?Math.max(...tItems.map(i=>i.sort_order||0))+1:0;
+  for(const cat of repSelectedCats){
+    await fetch(`${SUPA_URL}/rest/v1/tasks`,{method:'POST',headers:hdrs,body:JSON.stringify({
+      name:source.name,notes:source.notes||null,priority:source.priority,
+      category:cat,due:source.due||null,
+      added:new Date().toISOString().split('T')[0],sort_order:nextOrder++
+    })});
+  }
+  closeReplicateModal();await fetchAll();
+}
+
+function closeReplicateModal(){
+  document.getElementById('replicate-modal').classList.remove('open');
+  repTaskId=null;repSelectedCats=new Set();
 }
 
 // ── MOVE TO POSITION MODAL ────────────────────────────────────────────────
 let posType=null,posId=null;
-
 function openPosModal(type,id){
   posType=type;posId=id;
-  const list=getList(type);
-  const task=list.find(i=>i.id===id);
+  const list=getList(type);const task=list.find(i=>i.id===id);
   document.getElementById('pos-modal-name').textContent=task?.name||'';
   document.getElementById('pos-input').value=list.findIndex(i=>i.id===id)+1;
   document.getElementById('pos-max').textContent=`of ${list.length}`;
   document.getElementById('position-modal').classList.add('open');
 }
-
 function closePosModal(){document.getElementById('position-modal').classList.remove('open');}
-
 async function confirmMoveToPos(){
-  const list=getList(posType);
-  const newPos=parseInt(document.getElementById('pos-input').value)-1;
+  const list=getList(posType);const newPos=parseInt(document.getElementById('pos-input').value)-1;
   if(isNaN(newPos)||newPos<0||newPos>=list.length){closePosModal();return;}
-  const fromIdx=list.findIndex(i=>i.id===posId);
-  if(fromIdx===-1){closePosModal();return;}
+  const fromIdx=list.findIndex(i=>i.id===posId);if(fromIdx===-1){closePosModal();return;}
   const[moved]=list.splice(fromIdx,1);list.splice(newPos,0,moved);
-  setList(posType,[...list]);renderByType(posType);
-  await patchOrder(getTable(posType),list);closePosModal();
+  setList(posType,[...list]);renderByType(posType);await patchOrder(getTable(posType),list);closePosModal();
 }
 
 function toggleMoveMenu(id,e){
   e.stopPropagation();
   const dd=document.getElementById(`move-dd-${id}`);
   const isOpen=dd.classList.contains('open');
-  closeMoveMenus();
-  if(!isOpen)dd.classList.add('open');
+  closeMoveMenus();if(!isOpen)dd.classList.add('open');
 }
 function closeMoveMenus(){document.querySelectorAll('.move-dropdown').forEach(d=>d.classList.remove('open'));}
 document.addEventListener('click',closeMoveMenus);
@@ -1226,7 +1190,6 @@ async function moveToTop(type,id){
   if(idx<=0)return;const[moved]=list.splice(idx,1);list.unshift(moved);
   setList(type,[...list]);renderByType(type);await patchOrder(getTable(type),list);
 }
-
 async function moveToBottom(type,id){
   const list=getList(type);const idx=list.findIndex(i=>i.id===id);
   if(idx===list.length-1)return;const[moved]=list.splice(idx,1);list.push(moved);
@@ -1237,7 +1200,6 @@ async function moveToBottom(type,id){
 let snoozeTaskId=null,snoozeType=null;
 function openSnoozeModal(id,type){snoozeTaskId=id;snoozeType=type;document.getElementById('snooze-modal').classList.add('open');}
 function closeSnoozeModal(){document.getElementById('snooze-modal').classList.remove('open');snoozeTaskId=null;}
-
 async function snooze(val,unit){
   if(!snoozeTaskId)return;
   const ms=unit==='hours'?val*3600000:val*86400000;
@@ -1246,11 +1208,7 @@ async function snooze(val,unit){
   await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${snoozeTaskId}`,{method:'PATCH',headers:hdrs,body:JSON.stringify({due:newDue,reminder_sent:false})});
   closeSnoozeModal();await fetchAll();
 }
-
-async function snoozeCustom(){
-  const val=parseInt(document.getElementById('snooze-val').value)||1;
-  await snooze(val,document.getElementById('snooze-unit').value);
-}
+async function snoozeCustom(){const val=parseInt(document.getElementById('snooze-val').value)||1;await snooze(val,document.getElementById('snooze-unit').value);}
 
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 </script>
