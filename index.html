@@ -259,6 +259,17 @@
     <button class="quick-link-cancel" onclick="closeLinkEdit()">Cancel</button>
   </div>
 
+  <!-- NL Submission Form (editable) -->
+  <span style="display:inline-flex;align-items:center;gap:4px;">
+    <a class="quick-link" id="nl-submission-link" href="https://docs.google.com/forms/d/1y162w4nFZLxDQtpK20CvzCiQ3ccvsfRsh_EFMctGwME/edit" target="_blank">📝 NL Submission Form</a>
+    <button class="quick-link-edit" onclick="openNLLinkEdit()" title="Update URL for this month">✎</button>
+  </span>
+  <div class="quick-link-edit-form" id="nl-link-edit-form">
+    <input class="quick-link-edit-input" id="nl-link-edit-input" type="url" placeholder="Paste new NL Submission Form URL..." />
+    <button class="quick-link-save" onclick="saveNLLinkEdit()">Save</button>
+    <button class="quick-link-cancel" onclick="closeNLLinkEdit()">Cancel</button>
+  </div>
+
   <!-- Credit Card Form (fixed) -->
   <a class="quick-link" href="https://docs.google.com/spreadsheets/d/100EHGl84dbSJLJxdjc7MaE77xIopL47z_CqV7tScxKA/edit?gid=22132404#gid=22132404" target="_blank">💳 Credit Card Form</a>
 </div>
@@ -1261,14 +1272,33 @@ function saveLinkEdit(){
   if(!url)return;
   const link=document.getElementById('newsletter-link');
   link.href=url;
-  // Save to localStorage so it persists across refreshes
   localStorage.setItem('newsletter-tracker-url',url);
   closeLinkEdit();
 }
-// Restore saved URL on load
+function openNLLinkEdit(){
+  const link=document.getElementById('nl-submission-link');
+  const form=document.getElementById('nl-link-edit-form');
+  const input=document.getElementById('nl-link-edit-input');
+  input.value=link.href;
+  form.classList.add('open');
+  input.focus();input.select();
+}
+function closeNLLinkEdit(){document.getElementById('nl-link-edit-form').classList.remove('open');}
+function saveNLLinkEdit(){
+  const input=document.getElementById('nl-link-edit-input');
+  const url=input.value.trim();
+  if(!url)return;
+  const link=document.getElementById('nl-submission-link');
+  link.href=url;
+  localStorage.setItem('nl-submission-url',url);
+  closeNLLinkEdit();
+}
+// Restore saved URLs on load
 window.addEventListener('load',function(){
   const saved=localStorage.getItem('newsletter-tracker-url');
   if(saved)document.getElementById('newsletter-link').href=saved;
+  const savedNL=localStorage.getItem('nl-submission-url');
+  if(savedNL)document.getElementById('nl-submission-link').href=savedNL;
 });
 </script>
 </body>
