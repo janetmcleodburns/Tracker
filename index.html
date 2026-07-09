@@ -63,6 +63,21 @@
   .card-name{font-weight:600;font-size:15px;color:var(--ink);}
   /* Mobile-friendly card actions — wrap and never clip */
   .card-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:100%;}
+  /* Quick Links Bar */
+  .quick-links-bar{background:var(--white);border-bottom:1px solid var(--border);padding:8px 2rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .quick-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:6px 14px;border-radius:20px;border:1px solid var(--border);color:var(--teal);background:var(--teal-light);text-decoration:none;transition:all 0.15s;white-space:nowrap;}
+  .quick-link:hover{background:var(--teal);color:#fff;border-color:var(--teal);}
+  .quick-link-edit{background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:12px;padding:2px 4px;border-radius:4px;transition:color 0.15s;line-height:1;}
+  .quick-link-edit:hover{color:var(--teal);}
+  .quick-link-edit-form{display:none;align-items:center;gap:6px;flex-wrap:wrap;}
+  .quick-link-edit-form.open{display:flex;}
+  .quick-link-edit-input{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;outline:none;min-width:280px;max-width:400px;color:var(--ink);}
+  .quick-link-edit-input:focus{border-color:var(--teal-mid);}
+  .quick-link-save{font-size:12px;padding:5px 12px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-weight:500;}
+  .quick-link-cancel{font-size:12px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--ink-mid);cursor:pointer;}
+  .quick-links-label{font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
+  @media(max-width:600px){.quick-links-bar{padding:8px 1rem;}.quick-link-edit-input{min-width:200px;}}
+
   @media(max-width:600px){
     .card-top{flex-direction:column;gap:10px;}
     .card-actions{justify-content:flex-start;width:100%;}
@@ -229,6 +244,24 @@
     <div class="stat"><div class="stat-num" id="hdr-overdue">—</div><div class="stat-label">Overdue</div></div>
   </div>
 </header>
+
+<div class="quick-links-bar">
+  <span class="quick-links-label">🔗 Quick Links</span>
+
+  <!-- Newsletter Tracking Form (editable) -->
+  <span style="display:inline-flex;align-items:center;gap:4px;">
+    <a class="quick-link" id="newsletter-link" href="https://docs.google.com/spreadsheets/d/1HTNv-Qd3aMbmKY9VJs3eFPJL0iadFItPdUqx0sjIRSc/edit?gid=1420608459#gid=1420608459" target="_blank">📋 Newsletter Tracker</a>
+    <button class="quick-link-edit" onclick="openLinkEdit()" title="Update URL for this month">✎</button>
+  </span>
+  <div class="quick-link-edit-form" id="link-edit-form">
+    <input class="quick-link-edit-input" id="link-edit-input" type="url" placeholder="Paste new Google Sheets URL..." />
+    <button class="quick-link-save" onclick="saveLinkEdit()">Save</button>
+    <button class="quick-link-cancel" onclick="closeLinkEdit()">Cancel</button>
+  </div>
+
+  <!-- Credit Card Form (fixed) -->
+  <a class="quick-link" href="https://docs.google.com/spreadsheets/d/100EHGl84dbSJLJxdjc7MaE77xIopL47z_CqV7tScxKA/edit?gid=22132404#gid=22132404" target="_blank">💳 Credit Card Form</a>
+</div>
 
 <div class="tab-groups">
   <div class="tab-group-label">Work</div>
@@ -1211,6 +1244,32 @@ async function snooze(val,unit){
 async function snoozeCustom(){const val=parseInt(document.getElementById('snooze-val').value)||1;await snooze(val,document.getElementById('snooze-unit').value);}
 
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
+
+// ── QUICK LINKS ───────────────────────────────────────────────────────────
+function openLinkEdit(){
+  const link=document.getElementById('newsletter-link');
+  const form=document.getElementById('link-edit-form');
+  const input=document.getElementById('link-edit-input');
+  input.value=link.href;
+  form.classList.add('open');
+  input.focus();input.select();
+}
+function closeLinkEdit(){document.getElementById('link-edit-form').classList.remove('open');}
+function saveLinkEdit(){
+  const input=document.getElementById('link-edit-input');
+  const url=input.value.trim();
+  if(!url)return;
+  const link=document.getElementById('newsletter-link');
+  link.href=url;
+  // Save to localStorage so it persists across refreshes
+  localStorage.setItem('newsletter-tracker-url',url);
+  closeLinkEdit();
+}
+// Restore saved URL on load
+window.addEventListener('load',function(){
+  const saved=localStorage.getItem('newsletter-tracker-url');
+  if(saved)document.getElementById('newsletter-link').href=saved;
+});
 </script>
 </body>
 </html>
