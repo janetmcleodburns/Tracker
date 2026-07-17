@@ -773,8 +773,17 @@ function cardHTML(i,type,idx,total,isPersonal=false){
     </div>`;
 }
 
+function isRecurringVisible(i){
+  if(!i.recurring) return true;
+  if(!i.due) return true; // no due date set, show it
+  const today=new Date(); today.setHours(0,0,0,0);
+  const tomorrow=new Date(today); tomorrow.setDate(today.getDate()+1);
+  const due=new Date(i.due+'T00:00:00');
+  return due<=tomorrow; // show if due today, tomorrow, or overdue
+}
+
 function renderList(items,elId,type,filter,catFilter){
-  let f=items;
+  let f=items.filter(isRecurringVisible);
   if(filter==='overdue') f=items.filter(isOD);
   else if(filter!=='all') f=items.filter(i=>i.priority===filter);
   if(catFilter&&catFilter!=='all') f=f.filter(i=>i.category===catFilter);
