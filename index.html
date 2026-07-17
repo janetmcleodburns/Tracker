@@ -78,6 +78,52 @@
   .quick-links-label{font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;}
   @media(max-width:600px){.quick-links-bar{padding:8px 1rem;}.quick-link-edit-input{min-width:200px;}}
 
+  /* Sprint Planner */
+  #sprint-planner{background:var(--white);border-bottom:2px solid var(--teal);font-size:14px;}
+  .sp-header{display:flex;align-items:center;gap:10px;padding:10px 2rem;cursor:pointer;font-weight:700;color:var(--teal);font-size:14px;user-select:none;-webkit-user-select:none;}
+  .sp-header:hover{background:var(--teal-light);}
+  .sp-header-status{font-size:12px;color:var(--ink-mid);font-weight:400;margin-left:auto;}
+  .sp-toggle-arrow{margin-left:auto;font-size:11px;color:var(--ink-light);}
+  #sp-body{padding:14px 2rem 16px;}
+  .sp-setup-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .sp-field{display:flex;flex-direction:column;gap:4px;}
+  .sp-label{font-size:11px;font-weight:600;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.4px;}
+  .sp-time-input,.sp-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--ink);background:var(--white);}
+  .sp-time-input:focus,.sp-select:focus{outline:none;border-color:var(--teal-mid);}
+  .sp-tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .sp-add-task-btn{font-size:12px;padding:4px 10px;border-radius:8px;border:1px dashed var(--teal-mid);background:none;color:var(--teal);cursor:pointer;font-weight:600;}
+  .sp-add-task-btn:hover{background:var(--teal-light);}
+  .sp-task-chip{display:inline-flex;align-items:center;gap:6px;background:var(--teal-light);border:1px solid var(--teal-mid);color:var(--teal);border-radius:20px;padding:4px 10px;font-size:13px;margin:3px 4px 3px 0;}
+  .sp-task-remove{background:none;border:none;color:var(--teal);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;}
+  .sp-task-input-row{display:flex;gap:8px;align-items:center;margin:8px 0;}
+  .sp-task-input{flex:1;padding:6px 10px;border:1px solid var(--teal-mid);border-radius:8px;font-size:13px;outline:none;user-select:text;-webkit-user-select:text;}
+  .sp-save-task-btn{padding:6px 14px;border-radius:8px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-size:13px;font-weight:600;}
+  .sp-cancel-task-btn{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--ink-mid);cursor:pointer;font-size:13px;}
+  .sp-actions{display:flex;gap:10px;margin-top:14px;}
+  .sp-start-btn{padding:8px 20px;border-radius:10px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-size:13px;font-weight:700;}
+  .sp-start-btn:hover{background:var(--navy);}
+  .sp-skip-btn{padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--ink-mid);cursor:pointer;font-size:13px;}
+  .sp-skip-btn:hover{background:var(--teal-light);color:var(--teal);}
+  .sp-clear-btn{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--ink-light);cursor:pointer;font-size:12px;}
+  .sp-block{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;margin-bottom:6px;border:1px solid var(--border);}
+  .sp-block.sprint{background:var(--teal-light);border-color:var(--teal-mid);}
+  .sp-block.break{background:#fff8e1;border-color:#ffe082;}
+  .sp-block.active{border:2px solid var(--teal);box-shadow:0 0 0 3px rgba(91,184,212,0.15);}
+  .sp-block.done{opacity:0.4;}
+  .sp-block-time{font-size:12px;color:var(--ink-light);min-width:48px;font-weight:600;}
+  .sp-block-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-light);min-width:44px;}
+  .sp-block-task{font-size:13px;color:var(--ink);flex:1;}
+  .sp-schedule-actions{display:flex;gap:10px;margin-top:12px;}
+  .sp-current-block{text-align:center;padding:16px;background:var(--teal-light);border-radius:14px;border:2px solid var(--teal-mid);margin-bottom:12px;}
+  .sp-current-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:4px;}
+  .sp-current-task{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;}
+  .sp-timer{font-size:42px;font-weight:800;color:var(--teal);font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:8px;}
+  .sp-progress-bar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;}
+  .sp-progress-fill{height:100%;background:var(--teal);border-radius:4px;transition:width 1s linear;}
+  .sp-up-next{font-size:13px;color:var(--ink-mid);margin-bottom:12px;}
+  .sp-run-actions{display:flex;gap:10px;justify-content:center;}
+  @media(max-width:600px){#sp-body{padding:12px 1rem 14px;}.sp-setup-row{gap:10px;}.sp-timer{font-size:36px;}}
+
   @media(max-width:600px){
     .card-top{flex-direction:column;gap:10px;}
     .card-actions{justify-content:flex-start;width:100%;}
@@ -279,6 +325,91 @@
   <!-- Credit Card Form (fixed) -->
   <a class="quick-link" href="https://docs.google.com/forms/d/1KnvHpGa5nR8UKjJs0COLwp1_LjO4OFX5N8foTTQYHDY/edit" target="_blank">📝 Credit Card Form</a>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════ SPRINT PLANNER -->
+<div id="sprint-planner" style="display:none;">
+  <div class="sp-header" onclick="toggleSprintPlanner()">
+    <span>⚡ Sprint Planner</span>
+    <span id="sp-header-status"></span>
+    <span class="sp-toggle-arrow" id="sp-arrow">▲</span>
+  </div>
+  <div id="sp-body">
+
+    <!-- SETUP VIEW -->
+    <div id="sp-setup">
+      <div class="sp-setup-row">
+        <div class="sp-field">
+          <label class="sp-label">Work until</label>
+          <input type="time" id="sp-end-time" class="sp-time-input" value="13:00">
+        </div>
+        <div class="sp-field">
+          <label class="sp-label">Sprint length</label>
+          <select id="sp-duration" class="sp-select">
+            <option value="25" selected>25 min</option>
+            <option value="20">20 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+          </select>
+        </div>
+        <div class="sp-field">
+          <label class="sp-label">Break</label>
+          <select id="sp-break" class="sp-select">
+            <option value="5" selected>5 min</option>
+            <option value="0">No break</option>
+            <option value="10">10 min</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sp-tasks-header">
+        <span class="sp-label">Tasks to rotate through today</span>
+        <button class="sp-add-task-btn" onclick="spAddTask()">＋ Add</button>
+      </div>
+      <div id="sp-task-list"></div>
+      <div class="sp-task-input-row" id="sp-input-row" style="display:none;">
+        <input type="text" id="sp-task-input" class="sp-task-input" placeholder="Task name (e.g. Market Reports ×5)">
+        <button class="sp-save-task-btn" onclick="spSaveTask()">Add</button>
+        <button class="sp-cancel-task-btn" onclick="spCancelTask()">✕</button>
+      </div>
+
+      <div class="sp-actions">
+        <button class="sp-start-btn" onclick="spStart()">▶ Build My Schedule</button>
+        <button class="sp-clear-btn" onclick="spClear()">Clear</button>
+      </div>
+    </div>
+
+    <!-- SCHEDULE VIEW -->
+    <div id="sp-schedule" style="display:none;">
+      <div id="sp-blocks"></div>
+      <div class="sp-schedule-actions">
+        <button class="sp-start-btn" onclick="spStartTimer()">▶ Start First Sprint</button>
+        <button class="sp-clear-btn" onclick="spReset()">↩ Edit Plan</button>
+      </div>
+    </div>
+
+    <!-- RUNNING VIEW -->
+    <div id="sp-running" style="display:none;">
+      <div class="sp-current-block">
+        <div class="sp-current-label" id="sp-current-label">SPRINT 1</div>
+        <div class="sp-current-task" id="sp-current-task">—</div>
+        <div class="sp-timer" id="sp-timer">25:00</div>
+        <div class="sp-progress-bar"><div class="sp-progress-fill" id="sp-progress-fill"></div></div>
+      </div>
+      <div class="sp-up-next">
+        <span class="sp-label">Up next:</span>
+        <span id="sp-next-task">—</span>
+      </div>
+      <div class="sp-run-actions">
+        <button class="sp-start-btn" id="sp-pause-btn" onclick="spTogglePause()">⏸ Pause</button>
+        <button class="sp-skip-btn" onclick="spSkip()">Skip →</button>
+        <button class="sp-clear-btn" onclick="spReset()">↩ Edit Plan</button>
+      </div>
+      <div id="sp-remaining-blocks" style="margin-top:12px;"></div>
+    </div>
+
+  </div>
+</div>
+<!-- ════════════════════════════════════════════════════════════════════════ -->
 
 <div class="tab-groups">
   <div class="tab-group-label">Work</div>
@@ -1348,6 +1479,231 @@ async function checkCCResponses(){
 checkCCResponses();
 setInterval(checkCCResponses, 5 * 60 * 1000);
 // ─────────────────────────────────────────────────────────────────────────
+
+// ══════════════════════════════════════════════════ SPRINT PLANNER ════════
+const SP_KEY = 'sprintPlannerState';
+let spTasks = [], spBlocks = [], spCurrentIdx = 0, spTimerInterval = null, spSecondsLeft = 0, spTotalSeconds = 0, spPaused = false;
+
+function initSprintPlanner(){
+  document.getElementById('sprint-planner').style.display = 'block';
+  const saved = JSON.parse(localStorage.getItem(SP_KEY) || '{}');
+  if(saved.tasks) spTasks = saved.tasks;
+  if(saved.endTime) document.getElementById('sp-end-time').value = saved.endTime;
+  if(saved.duration) document.getElementById('sp-duration').value = saved.duration;
+  if(saved.breakLen) document.getElementById('sp-break').value = saved.breakLen;
+  spRenderTaskChips();
+  if(saved.blocks && saved.blocks.length){
+    spBlocks = saved.blocks;
+    spCurrentIdx = saved.currentIdx || 0;
+    if(saved.running){
+      spSecondsLeft = saved.secondsLeft || 0;
+      spShowRunning();
+      spRenderRunning();
+    } else {
+      spShowSchedule();
+    }
+  }
+}
+
+function toggleSprintPlanner(){
+  const body = document.getElementById('sp-body');
+  const arrow = document.getElementById('sp-arrow');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  arrow.textContent = open ? '▼' : '▲';
+}
+
+function spSave(extra={}){
+  localStorage.setItem(SP_KEY, JSON.stringify({
+    tasks: spTasks,
+    endTime: document.getElementById('sp-end-time').value,
+    duration: document.getElementById('sp-duration').value,
+    breakLen: document.getElementById('sp-break').value,
+    blocks: spBlocks,
+    currentIdx: spCurrentIdx,
+    secondsLeft: spSecondsLeft,
+    ...extra
+  }));
+}
+
+// ── Task chips ───────────────────────────────────────────────────────────
+function spAddTask(){
+  document.getElementById('sp-input-row').style.display = 'flex';
+  document.getElementById('sp-task-input').focus();
+}
+function spCancelTask(){
+  document.getElementById('sp-input-row').style.display = 'none';
+  document.getElementById('sp-task-input').value = '';
+}
+function spSaveTask(){
+  const val = document.getElementById('sp-task-input').value.trim();
+  if(!val) return;
+  spTasks.push(val);
+  document.getElementById('sp-task-input').value = '';
+  document.getElementById('sp-input-row').style.display = 'none';
+  spRenderTaskChips();
+  spSave();
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.getElementById('sp-input-row').style.display !== 'none'){
+    spSaveTask();
+  }
+});
+function spRemoveTask(idx){
+  spTasks.splice(idx, 1);
+  spRenderTaskChips();
+  spSave();
+}
+function spRenderTaskChips(){
+  const el = document.getElementById('sp-task-list');
+  if(!spTasks.length){ el.innerHTML = '<div style="font-size:12px;color:var(--ink-light);padding:4px 0;">No tasks yet — add some above</div>'; return; }
+  el.innerHTML = spTasks.map((t,i) => `<span class="sp-task-chip">🔸 ${t}<button class="sp-task-remove" onclick="spRemoveTask(${i})">✕</button></span>`).join('');
+}
+
+// ── Build schedule ───────────────────────────────────────────────────────
+function spStart(){
+  if(!spTasks.length){ alert('Add at least one task first!'); return; }
+  const endTime = document.getElementById('sp-end-time').value;
+  const duration = parseInt(document.getElementById('sp-duration').value);
+  const breakLen = parseInt(document.getElementById('sp-break').value);
+  const [eh, em] = endTime.split(':').map(Number);
+  const now = new Date();
+  const end = new Date(); end.setHours(eh, em, 0, 0);
+  if(end <= now){ alert('End time must be in the future!'); return; }
+  let minutesLeft = Math.floor((end - now) / 60000);
+  const blocks = [];
+  let cursor = new Date(now);
+  cursor.setSeconds(0,0);
+  let taskIdx = 0;
+  while(minutesLeft >= duration){
+    const timeStr = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    blocks.push({ type:'sprint', time: timeStr, task: spTasks[taskIdx % spTasks.length], durationMins: duration });
+    cursor.setMinutes(cursor.getMinutes() + duration);
+    minutesLeft -= duration;
+    taskIdx++;
+    if(breakLen > 0 && minutesLeft >= breakLen){
+      const bTime = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+      blocks.push({ type:'break', time: bTime, task: '☕ Break', durationMins: breakLen });
+      cursor.setMinutes(cursor.getMinutes() + breakLen);
+      minutesLeft -= breakLen;
+    }
+  }
+  if(!blocks.length){ alert('Not enough time for even one sprint!'); return; }
+  spBlocks = blocks;
+  spCurrentIdx = 0;
+  spSave();
+  spShowSchedule();
+}
+
+function spClear(){
+  spTasks = [];
+  spBlocks = [];
+  spCurrentIdx = 0;
+  localStorage.removeItem(SP_KEY);
+  spRenderTaskChips();
+  spShowSetup();
+}
+
+// ── Views ────────────────────────────────────────────────────────────────
+function spShowSetup(){ document.getElementById('sp-setup').style.display='block'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='none'; }
+function spShowSchedule(){ document.getElementById('sp-setup').style.display='none'; document.getElementById('sp-schedule').style.display='block'; document.getElementById('sp-running').style.display='none'; spRenderSchedule(); }
+function spShowRunning(){ document.getElementById('sp-setup').style.display='none'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='block'; }
+
+function spRenderSchedule(){
+  const el = document.getElementById('sp-blocks');
+  el.innerHTML = spBlocks.map((b,i) => `
+    <div class="sp-block ${b.type} ${i===spCurrentIdx?'active':''} ${i<spCurrentIdx?'done':''}">
+      <span class="sp-block-time">${b.time}</span>
+      <span class="sp-block-label">${b.type==='sprint'?'Sprint':'Break'}</span>
+      <span class="sp-block-task">${b.task}</span>
+      <span style="font-size:11px;color:var(--ink-light)">${b.durationMins}m</span>
+    </div>`).join('');
+}
+
+// ── Timer ────────────────────────────────────────────────────────────────
+function spStartTimer(){
+  if(spCurrentIdx >= spBlocks.length) return;
+  const block = spBlocks[spCurrentIdx];
+  spTotalSeconds = block.durationMins * 60;
+  spSecondsLeft = spTotalSeconds;
+  spPaused = false;
+  spShowRunning();
+  spRenderRunning();
+  spTick();
+}
+
+function spTick(){
+  if(spTimerInterval) clearInterval(spTimerInterval);
+  spTimerInterval = setInterval(()=>{
+    if(spPaused) return;
+    spSecondsLeft--;
+    spSave({ running: true, secondsLeft: spSecondsLeft });
+    spRenderRunning();
+    if(spSecondsLeft <= 0){
+      clearInterval(spTimerInterval);
+      spAdvance();
+    }
+  }, 1000);
+}
+
+function spRenderRunning(){
+  const block = spBlocks[spCurrentIdx];
+  if(!block) return;
+  const mins = Math.floor(spSecondsLeft/60).toString().padStart(2,'0');
+  const secs = (spSecondsLeft%60).toString().padStart(2,'0');
+  document.getElementById('sp-current-label').textContent = block.type==='sprint' ? `Sprint ${spBlocks.slice(0,spCurrentIdx+1).filter(b=>b.type==='sprint').length} of ${spBlocks.filter(b=>b.type==='sprint').length}` : '☕ Break';
+  document.getElementById('sp-current-task').textContent = block.task;
+  document.getElementById('sp-timer').textContent = `${mins}:${secs}`;
+  const pct = ((spTotalSeconds - spSecondsLeft) / spTotalSeconds * 100).toFixed(1);
+  document.getElementById('sp-progress-fill').style.width = pct + '%';
+  const next = spBlocks[spCurrentIdx + 1];
+  document.getElementById('sp-next-task').textContent = next ? next.task : '🎉 Done for the session!';
+  // Remaining mini blocks
+  const rem = document.getElementById('sp-remaining-blocks');
+  rem.innerHTML = spBlocks.slice(spCurrentIdx+1).map(b=>`
+    <div class="sp-block ${b.type}" style="padding:6px 10px;">
+      <span class="sp-block-time">${b.time}</span>
+      <span class="sp-block-label">${b.type==='sprint'?'Sprint':'Break'}</span>
+      <span class="sp-block-task">${b.task}</span>
+    </div>`).join('');
+}
+
+function spAdvance(){
+  if(spTimerInterval) clearInterval(spTimerInterval);
+  spCurrentIdx++;
+  if(spCurrentIdx >= spBlocks.length){
+    spSave({ running: false });
+    document.getElementById('sp-current-task').textContent = '🎉 All done! Great work!';
+    document.getElementById('sp-timer').textContent = '0:00';
+    document.getElementById('sp-progress-fill').style.width = '100%';
+    document.getElementById('sp-pause-btn').style.display = 'none';
+    document.getElementById('sp-remaining-blocks').innerHTML = '';
+    return;
+  }
+  // Play a soft beep
+  try{ const ctx=new AudioContext(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value=520; g.gain.setValueAtTime(0.3,ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.6); o.start(); o.stop(ctx.currentTime+0.6); }catch(e){}
+  spStartTimer();
+}
+
+function spTogglePause(){
+  spPaused = !spPaused;
+  document.getElementById('sp-pause-btn').textContent = spPaused ? '▶ Resume' : '⏸ Pause';
+}
+
+function spSkip(){ spAdvance(); }
+
+function spReset(){
+  if(spTimerInterval) clearInterval(spTimerInterval);
+  spPaused = false;
+  spCurrentIdx = 0;
+  spBlocks = [];
+  spSave({ running: false });
+  spShowSetup();
+}
+
+// Init on load
+window.addEventListener('load', ()=>{ setTimeout(initSprintPlanner, 500); });
+// ═════════════════════════════════════════════════════════════════════════
 
 </script>
 </body>
