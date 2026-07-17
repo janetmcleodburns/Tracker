@@ -91,8 +91,8 @@
   .sp-time-input,.sp-select{padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--ink);background:var(--white);}
   .sp-time-input:focus,.sp-select:focus{outline:none;border-color:var(--teal-mid);}
   .sp-tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-  .sp-add-task-btn{font-size:12px;padding:4px 10px;border-radius:8px;border:1px dashed var(--teal-mid);background:none;color:var(--teal);cursor:pointer;font-weight:600;}
-  .sp-add-task-btn:hover{background:var(--teal-light);}
+  .sp-add-task-btn{font-size:13px;padding:6px 14px;border-radius:8px;border:2px dashed var(--teal-mid);background:var(--teal-light);color:var(--teal);cursor:pointer;font-weight:700;}
+  .sp-add-task-btn:hover{background:var(--teal);color:#fff;border-style:solid;}
   .sp-task-chip{display:inline-flex;align-items:center;gap:6px;background:var(--teal-light);border:1px solid var(--teal-mid);color:var(--teal);border-radius:20px;padding:4px 10px;font-size:13px;margin:3px 4px 3px 0;}
   .sp-task-remove{background:none;border:none;color:var(--teal);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;}
   .sp-task-input-row{display:flex;gap:8px;align-items:center;margin:8px 0;}
@@ -363,11 +363,11 @@
 
       <div class="sp-tasks-header">
         <span class="sp-label">Tasks to rotate through today</span>
-        <button class="sp-add-task-btn" onclick="spAddTask()">＋ Add</button>
+        <button class="sp-add-task-btn" onclick="spAddTask()">＋ Add Task</button>
       </div>
-      <div id="sp-task-list"></div>
+      <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:4px 0;">No tasks yet — click ＋ Add Task to begin</div></div>
       <div class="sp-task-input-row" id="sp-input-row" style="display:none;">
-        <input type="text" id="sp-task-input" class="sp-task-input" placeholder="Task name (e.g. Market Reports ×5)">
+        <input type="text" id="sp-task-input" class="sp-task-input" placeholder="e.g. Market Reports ×5">
         <button class="sp-save-task-btn" onclick="spSaveTask()">Add</button>
         <button class="sp-cancel-task-btn" onclick="spCancelTask()">✕</button>
       </div>
