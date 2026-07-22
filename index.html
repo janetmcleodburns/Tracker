@@ -1529,21 +1529,15 @@ function spSave(extra={}){
 }
 
 // ── Task list with drag reorder ───────────────────────────────────────────
-function spAddTask(){
-  document.getElementById('sp-input-row').style.display = 'block';
-  document.getElementById('sp-task-input').focus();
-}
-function spCancelTask(){
-  document.getElementById('sp-input-row').style.display = 'none';
-  document.getElementById('sp-task-input').value = '';
-}
+function spAddTask(){ document.getElementById('sp-task-input').focus(); }
+function spCancelTask(){ document.getElementById('sp-task-input').value = ''; }
 function spSaveTask(){
   const name = document.getElementById('sp-task-input').value.trim();
   const mins = parseInt(document.getElementById('sp-task-duration').value);
   if(!name) return;
   spTasks.push({ name, mins });
   document.getElementById('sp-task-input').value = '';
-  document.getElementById('sp-input-row').style.display = 'none';
+  document.getElementById('sp-task-input').focus();
   spRenderTaskList();
   spSave();
 }
@@ -1586,7 +1580,7 @@ function spDrop(e, idx){
 function spDragEnd(){ document.querySelectorAll('.sp-task-row').forEach(r=>r.classList.remove('sp-dragging')); spDragSrc = null; }
 
 document.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && document.getElementById('sp-input-row') && document.getElementById('sp-input-row').style.display !== 'none'){
+  if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'sp-task-input'){
     spSaveTask();
   }
 });
