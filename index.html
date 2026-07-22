@@ -95,10 +95,14 @@
   .sp-add-task-btn:hover{background:var(--teal);color:#fff;border-style:solid;}
   .sp-task-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--teal-light);border:1px solid var(--teal-mid);border-radius:10px;margin-bottom:6px;cursor:default;}
   .sp-task-row.sp-dragging{opacity:0.4;}
-  .sp-drag-handle{cursor:grab;color:var(--teal);font-size:16px;user-select:none;-webkit-user-select:none;}
+  .sp-task-row.sp-drag-over{border:2px solid var(--teal);background:#e0f4fa;}
+  .sp-drag-handle{cursor:grab;color:var(--teal);font-size:16px;user-select:none;-webkit-user-select:none;flex-shrink:0;}
   .sp-task-name{flex:1;font-size:13px;color:var(--navy);font-weight:600;}
-  .sp-task-mins{font-size:12px;color:var(--teal);font-weight:700;background:#fff;border-radius:6px;padding:2px 8px;border:1px solid var(--teal-mid);}
-  .sp-task-remove{background:none;border:none;color:var(--ink-light);cursor:pointer;font-size:14px;padding:0 2px;}
+  .sp-task-mins{font-size:12px;color:var(--teal);font-weight:700;background:#fff;border-radius:6px;padding:2px 8px;border:1px solid var(--teal-mid);flex-shrink:0;}
+  .sp-break-col{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+  .sp-break-label{font-size:11px;color:var(--ink-light);}
+  .sp-break-select{font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;color:var(--ink-mid);background:var(--white);}
+  .sp-task-remove{background:none;border:none;color:var(--ink-light);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;}
   .sp-task-remove:hover{color:#e53935;}
   .sp-task-input-row{display:flex;gap:8px;align-items:center;margin:8px 0;}
   .sp-task-input{flex:1;padding:6px 10px;border:1px solid var(--teal-mid);border-radius:8px;font-size:13px;outline:none;user-select:text;-webkit-user-select:text;}
@@ -370,21 +374,10 @@
       </div>
       <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:6px 0;">No sprints yet — add one above</div></div>
 
-      <!-- Break + Build -->
-      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;">
-        <div class="form-col">
-          <label class="sp-label">Break between sprints</label>
-          <select id="sp-break" class="sp-select">
-            <option value="0">No break</option>
-            <option value="5" selected>5 min</option>
-            <option value="10">10 min</option>
-            <option value="15">15 min</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:8px;align-items:flex-end;">
-          <button class="sp-start-btn" onclick="spBuildSchedule()">▶ Build Schedule</button>
-          <button class="sp-clear-btn" onclick="spClear()">Clear All</button>
-        </div>
+      <!-- Build -->
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="sp-start-btn" onclick="spBuildSchedule()">▶ Build Schedule</button>
+        <button class="sp-clear-btn" onclick="spClear()">Clear All</button>
       </div>
 
     </div>
@@ -1554,30 +1547,66 @@ function spRenderTaskList(){
     return;
   }
   el.innerHTML = spTasks.map((t,i) => `
-    <div class="sp-task-row" draggable="true" data-idx="${i}"
-      ondragstart="spDragStart(event,${i})"
-      ondragover="spDragOver(event)"
-      ondrop="spDrop(event,${i})"
-      ondragend="spDragEnd()">
-      <span class="sp-drag-handle">⠿</span>
+    <div class="sp-task-row" id="sp-row-${i}" data-idx="${i}"
+      ondragover="spDragOver(event,${i})"
+      ondrop="spDrop(event,${i})">
+      <span class="sp-drag-handle" 
+        onmousedown="spHandleMouseDown(event,${i})"
+        ontouchstart="spHandleMouseDown(event,${i})">⠿</span>
       <span class="sp-task-name">${t.name}</span>
       <span class="sp-task-mins">${t.mins}m</span>
+      <div class="sp-break-col" title="Break after this sprint">
+        ${i < spTasks.length - 1 ? `
+        <span class="sp-break-label">then</span>
+        <select class="sp-break-select" onchange="spSetBreak(${i}, this.value)">
+          <option value="0" ${(t.breakAfter||0)==0?'selected':''}>no break</option>
+          <option value="5" ${(t.breakAfter||0)==5?'selected':''}>5m break</option>
+          <option value="10" ${(t.breakAfter||0)==10?'selected':''}>10m break</option>
+          <option value="15" ${(t.breakAfter||0)==15?'selected':''}>15m break</option>
+          <option value="20" ${(t.breakAfter||0)==20?'selected':''}>20m break</option>
+        </select>` : '<span style="font-size:11px;color:var(--ink-light);">last sprint</span>'}
+      </div>
       <button class="sp-task-remove" onclick="spRemoveTask(${i})">✕</button>
     </div>`).join('');
 }
 
-function spDragStart(e, idx){ spDragSrc = idx; e.dataTransfer.effectAllowed = 'move'; setTimeout(()=>document.querySelectorAll('.sp-task-row')[idx]?.classList.add('sp-dragging'),0); }
-function spDragOver(e){ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+function spSetBreak(idx, val){
+  spTasks[idx].breakAfter = parseInt(val);
+  spSave();
+}
+
+function spHandleMouseDown(e, idx){
+  const row = document.getElementById('sp-row-' + idx);
+  if(row){ row.setAttribute('draggable','true'); row.addEventListener('dragstart', ev=>spDragStart(ev,idx), {once:true}); }
+}
+function spDragStart(e, idx){ 
+  spDragSrc = idx; 
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', idx);
+  setTimeout(()=>document.getElementById('sp-row-'+idx)?.classList.add('sp-dragging'),0); 
+}
+function spDragOver(e, idx){ 
+  e.preventDefault(); 
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move'; 
+  document.querySelectorAll('.sp-task-row').forEach(r=>r.classList.remove('sp-drag-over'));
+  document.getElementById('sp-row-'+idx)?.classList.add('sp-drag-over');
+}
 function spDrop(e, idx){
   e.preventDefault();
-  if(spDragSrc === null || spDragSrc === idx) return;
+  e.stopPropagation();
+  document.querySelectorAll('.sp-task-row').forEach(r=>{r.classList.remove('sp-dragging');r.classList.remove('sp-drag-over');r.removeAttribute('draggable');});
+  if(spDragSrc === null || spDragSrc === idx){ spDragSrc=null; return; }
   const moved = spTasks.splice(spDragSrc, 1)[0];
   spTasks.splice(idx, 0, moved);
   spDragSrc = null;
   spRenderTaskList();
   spSave();
 }
-function spDragEnd(){ document.querySelectorAll('.sp-task-row').forEach(r=>r.classList.remove('sp-dragging')); spDragSrc = null; }
+function spDragEnd(){ 
+  document.querySelectorAll('.sp-task-row').forEach(r=>{r.classList.remove('sp-dragging');r.classList.remove('sp-drag-over');r.removeAttribute('draggable');}); 
+  spDragSrc = null; 
+}
 
 document.addEventListener('keydown', e => {
   if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'sp-task-input'){
@@ -1588,7 +1617,6 @@ document.addEventListener('keydown', e => {
 // ── Build schedule ────────────────────────────────────────────────────────
 function spBuildSchedule(){
   if(!spTasks.length){ alert('Add at least one sprint first!'); return; }
-  const breakLen = parseInt(document.getElementById('sp-break').value);
   const now = new Date(); now.setSeconds(0,0);
   const blocks = [];
   let cursor = new Date(now);
@@ -1596,9 +1624,10 @@ function spBuildSchedule(){
     const timeStr = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
     blocks.push({ type:'sprint', time: timeStr, task: t.name, durationMins: t.mins });
     cursor.setMinutes(cursor.getMinutes() + t.mins);
+    const breakLen = t.breakAfter || 0;
     if(breakLen > 0 && i < spTasks.length - 1){
       const bTime = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-      blocks.push({ type:'break', time: bTime, task: `☕ Break`, durationMins: breakLen });
+      blocks.push({ type:'break', time: bTime, task: `☕ ${breakLen}-min break`, durationMins: breakLen });
       cursor.setMinutes(cursor.getMinutes() + breakLen);
     }
   });
