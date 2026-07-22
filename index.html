@@ -347,20 +347,29 @@
         <span class="sp-label">Your sprints today — drag to reorder</span>
         <button class="sp-add-task-btn" onclick="spAddTask()">＋ Add Sprint</button>
       </div>
-      <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:4px 0;">No sprints yet — click ＋ Add Sprint to begin</div></div>
+      <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:6px 0;">No sprints yet — click ＋ Add Sprint to begin</div></div>
 
-      <div class="sp-task-input-row" id="sp-input-row" style="display:none;">
-        <input type="text" id="sp-task-input" class="sp-task-input" placeholder="Task name (e.g. Market Reports ×5)">
-        <select id="sp-task-duration" class="sp-select" style="min-width:80px;">
-          <option value="15">15 min</option>
-          <option value="20">20 min</option>
-          <option value="25" selected>25 min</option>
-          <option value="30">30 min</option>
-          <option value="45">45 min</option>
-          <option value="60">60 min</option>
-        </select>
-        <button class="sp-save-task-btn" onclick="spSaveTask()">Add</button>
-        <button class="sp-cancel-task-btn" onclick="spCancelTask()">✕</button>
+      <!-- Add Sprint Form -->
+      <div id="sp-input-row" style="display:none;background:var(--cream);border-radius:10px;padding:12px;margin-top:8px;border:1px solid var(--border);">
+        <div class="form-col" style="margin-bottom:10px;">
+          <label class="sp-label">Task name</label>
+          <input type="text" id="sp-task-input" class="sp-task-input" placeholder="e.g. Market Reports ×5" style="width:100%;box-sizing:border-box;user-select:text;-webkit-user-select:text;">
+        </div>
+        <div class="form-col" style="margin-bottom:12px;">
+          <label class="sp-label">Sprint time</label>
+          <select id="sp-task-duration" class="sp-select">
+            <option value="15">15 min</option>
+            <option value="20">20 min</option>
+            <option value="25" selected>25 min</option>
+            <option value="30">30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="sp-save-task-btn" onclick="spSaveTask()">Add Sprint</button>
+          <button class="sp-cancel-task-btn" onclick="spCancelTask()">Cancel</button>
+        </div>
       </div>
 
       <div class="sp-actions">
@@ -1510,7 +1519,7 @@ function spSave(extra={}){
 
 // ── Task list with drag reorder ───────────────────────────────────────────
 function spAddTask(){
-  document.getElementById('sp-input-row').style.display = 'flex';
+  document.getElementById('sp-input-row').style.display = 'block';
   document.getElementById('sp-task-input').focus();
 }
 function spCancelTask(){
