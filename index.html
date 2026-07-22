@@ -1658,16 +1658,6 @@ function spShowSchedule(endTime){
   spRenderScheduleBlocks();
 }
 
-function spRecalcTimes(){
-  const now = new Date(); now.setSeconds(0,0);
-  let cursor = new Date(now);
-  spBlocks.forEach(b => {
-    b.time = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-    cursor.setMinutes(cursor.getMinutes() + b.durationMins);
-  });
-  return cursor; // returns end time cursor
-}
-
 function spMoveBlock(idx, dir){
   // Find the "chunk" — a sprint block plus any immediately following break
   // Build list of chunk start indices (sprint only, breaks are attached)
@@ -1695,34 +1685,45 @@ function spMoveBlock(idx, dir){
   }
   const insertAt = chunks2[targetIdx] ? chunks2[targetIdx].start : spBlocks.length;
   spBlocks.splice(insertAt, 0, ...chunk);
-  spRecalcTimes();
   spSave({ running: false });
   spRenderScheduleBlocks();
 }
 
 function spRenderScheduleBlocks(){
-  const endCursor = spRecalcTimes();
-  const endTime = endCursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
-  // Build list of sprint indices for up/down logic
+  // Recalc all times from now
+  const now = new Date(); now.setSeconds(0,0);
+  let cursor = new Date(now);
+  spBlocks.forEach(b => {
+    b.time = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    cursor.setMinutes(cursor.getMinutes() + (parseInt(b.durationMins)||0));
+  });
+  const endTime = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+
+  // Sprint counter for labels (only count sprint blocks)
+  let sprintCount = 0;
+  const totalSprints = spBlocks.filter(b=>b.type==='sprint').length;
+  // Find sprint block indices for up/down button logic
   const sprintIndices = spBlocks.map((b,i)=>b.type==='sprint'?i:-1).filter(i=>i>=0);
+
   const el = document.getElementById('sp-blocks');
   el.innerHTML = spBlocks.map((b,i) => {
     const isSprint = b.type === 'sprint';
+    if(isSprint) sprintCount++;
     const sprintPos = sprintIndices.indexOf(i);
     const isFirst = sprintPos === 0;
     const isLast = sprintPos === sprintIndices.length - 1;
     return `
-    <div class="sp-block ${b.type}">
-      <span class="sp-block-time">${b.time}</span>
-      <span class="sp-block-label">${b.type==='sprint'?'Sprint':'Break'}</span>
-      <span class="sp-block-task">${b.task}</span>
-      <span style="font-size:11px;color:var(--ink-light);margin-left:auto;">${b.durationMins}m</span>
+    <div class="sp-block ${b.type}" style="display:flex;align-items:center;gap:10px;">
+      <span class="sp-block-time" style="min-width:70px;font-size:12px;font-weight:700;color:var(--teal);">${b.time}</span>
+      <span class="sp-block-label">${isSprint ? `Sprint ${sprintCount}/${totalSprints}` : 'Break'}</span>
+      <span class="sp-block-task" style="flex:1;">${b.task}</span>
+      <span style="font-size:11px;color:var(--ink-light);">${b.durationMins}m</span>
       ${isSprint ? `
-        <button class="sp-move-btn" onclick="spMoveBlock(${i},-1)" ${isFirst?'disabled':''} title="Move up">▲</button>
-        <button class="sp-move-btn" onclick="spMoveBlock(${i},1)" ${isLast?'disabled':''} title="Move down">▼</button>
-      ` : ''}
+        <button class="sp-move-btn" onclick="spMoveBlock(${i},-1)" ${isFirst?'disabled':''}>▲</button>
+        <button class="sp-move-btn" onclick="spMoveBlock(${i},1)" ${isLast?'disabled':''}>▼</button>
+      ` : '<span style="width:44px;"></span>'}
     </div>`;
-  }).join('') + `<div style="font-size:12px;color:var(--ink-mid);margin-top:8px;padding:6px 12px;">🏁 Done by <strong>${endTime}</strong></div>`;
+  }).join('') + `<div style="font-size:13px;color:var(--ink-mid);margin-top:10px;padding:6px 12px;font-weight:600;">🏁 Done by ${endTime}</div>`;
 }
 function spShowRunning(){ document.getElementById('sp-setup').style.display='none'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='block'; }
 
