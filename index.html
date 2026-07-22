@@ -1767,12 +1767,25 @@ function spRenderRunning(){
   document.getElementById('sp-next-task').textContent = next ? `${next.task} (${next.durationMins}m)` : '🎉 That\'s your last one!';
   // Remaining list
   const rem = document.getElementById('sp-remaining-blocks');
-  rem.innerHTML = spBlocks.slice(spCurrentIdx + 1).map((b,i) => `
-    <div class="sp-block sprint">
-      <span class="sp-block-label">Sprint ${spCurrentIdx + 2 + i}</span>
-      <span class="sp-block-task">${b.task}</span>
-      <span style="font-size:11px;color:var(--ink-light)">${b.durationMins}m</span>
-    </div>`).join('');
+  // Calculate times for remaining blocks from now + seconds left
+  const upcoming = spBlocks.slice(spCurrentIdx + 1);
+  let cursor = new Date();
+  cursor.setSeconds(cursor.getSeconds() + spSecondsLeft);
+  let sprintCounter = spBlocks.slice(0, spCurrentIdx + 1).filter(b=>b.type==='sprint').length;
+  const totalSprints = spBlocks.filter(b=>b.type==='sprint').length;
+  rem.innerHTML = upcoming.map((b) => {
+    const timeStr = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    cursor.setMinutes(cursor.getMinutes() + (parseInt(b.durationMins)||0));
+    const isSprint = b.type === 'sprint';
+    if(isSprint) sprintCounter++;
+    return `
+    <div class="sp-block ${b.type}" style="display:flex;align-items:center;gap:10px;">
+      <span style="min-width:70px;font-size:12px;font-weight:700;color:var(--teal);">${timeStr}</span>
+      <span class="sp-block-label">${isSprint ? `Sprint ${sprintCounter}/${totalSprints}` : 'Break'}</span>
+      <span class="sp-block-task" style="flex:1;">${b.task}</span>
+      <span style="font-size:11px;color:var(--ink-light);">${b.durationMins}m</span>
+    </div>`;
+  }).join('');
 }
 
 function spAdvance(){
