@@ -122,6 +122,9 @@
   .sp-block-time{font-size:12px;color:var(--ink-light);min-width:48px;font-weight:600;}
   .sp-block-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-light);min-width:44px;}
   .sp-block-task{font-size:13px;color:var(--ink);flex:1;}
+  .sp-move-btn{background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--ink-light);padding:1px 5px;font-size:11px;line-height:1.4;flex-shrink:0;}
+  .sp-move-btn:hover{background:var(--teal-light);color:var(--teal);border-color:var(--teal-mid);}
+  .sp-move-btn:disabled{opacity:0.2;cursor:default;}
   .sp-schedule-actions{display:flex;gap:10px;margin-top:12px;}
   .sp-current-block{text-align:center;padding:16px;background:var(--teal-light);border-radius:14px;border:2px solid var(--teal-mid);margin-bottom:12px;}
   .sp-current-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:4px;}
@@ -1652,14 +1655,74 @@ function spShowSchedule(endTime){
   document.getElementById('sp-setup').style.display='none';
   document.getElementById('sp-schedule').style.display='block';
   document.getElementById('sp-running').style.display='none';
+  spRenderScheduleBlocks();
+}
+
+function spRecalcTimes(){
+  const now = new Date(); now.setSeconds(0,0);
+  let cursor = new Date(now);
+  spBlocks.forEach(b => {
+    b.time = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    cursor.setMinutes(cursor.getMinutes() + b.durationMins);
+  });
+  return cursor; // returns end time cursor
+}
+
+function spMoveBlock(idx, dir){
+  // Find the "chunk" — a sprint block plus any immediately following break
+  // Build list of chunk start indices (sprint only, breaks are attached)
+  const chunks = [];
+  for(let i=0; i<spBlocks.length; i++){
+    if(spBlocks[i].type === 'sprint'){
+      const hasBreak = spBlocks[i+1] && spBlocks[i+1].type === 'break';
+      chunks.push({ start: i, len: hasBreak ? 2 : 1 });
+    }
+  }
+  // Find which chunk contains idx
+  const chunkIdx = chunks.findIndex(c => c.start === idx);
+  if(chunkIdx === -1) return;
+  const targetIdx = chunkIdx + dir;
+  if(targetIdx < 0 || targetIdx >= chunks.length) return;
+  // Extract this chunk
+  const chunk = spBlocks.splice(chunks[chunkIdx].start, chunks[chunkIdx].len);
+  // Recalculate target position after splice
+  const chunks2 = [];
+  for(let i=0; i<spBlocks.length; i++){
+    if(spBlocks[i].type === 'sprint'){
+      const hasBreak = spBlocks[i+1] && spBlocks[i+1].type === 'break';
+      chunks2.push({ start: i, len: hasBreak ? 2 : 1 });
+    }
+  }
+  const insertAt = chunks2[targetIdx] ? chunks2[targetIdx].start : spBlocks.length;
+  spBlocks.splice(insertAt, 0, ...chunk);
+  spRecalcTimes();
+  spSave({ running: false });
+  spRenderScheduleBlocks();
+}
+
+function spRenderScheduleBlocks(){
+  const endCursor = spRecalcTimes();
+  const endTime = endCursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  // Build list of sprint indices for up/down logic
+  const sprintIndices = spBlocks.map((b,i)=>b.type==='sprint'?i:-1).filter(i=>i>=0);
   const el = document.getElementById('sp-blocks');
-  el.innerHTML = spBlocks.map((b,i) => `
+  el.innerHTML = spBlocks.map((b,i) => {
+    const isSprint = b.type === 'sprint';
+    const sprintPos = sprintIndices.indexOf(i);
+    const isFirst = sprintPos === 0;
+    const isLast = sprintPos === sprintIndices.length - 1;
+    return `
     <div class="sp-block ${b.type}">
       <span class="sp-block-time">${b.time}</span>
       <span class="sp-block-label">${b.type==='sprint'?'Sprint':'Break'}</span>
       <span class="sp-block-task">${b.task}</span>
-      <span style="font-size:11px;color:var(--ink-light)">${b.durationMins}m</span>
-    </div>`).join('') + (endTime ? `<div style="font-size:12px;color:var(--ink-mid);margin-top:8px;padding:6px 12px;">🏁 Done by <strong>${endTime}</strong></div>` : '');
+      <span style="font-size:11px;color:var(--ink-light);margin-left:auto;">${b.durationMins}m</span>
+      ${isSprint ? `
+        <button class="sp-move-btn" onclick="spMoveBlock(${i},-1)" ${isFirst?'disabled':''} title="Move up">▲</button>
+        <button class="sp-move-btn" onclick="spMoveBlock(${i},1)" ${isLast?'disabled':''} title="Move down">▼</button>
+      ` : ''}
+    </div>`;
+  }).join('') + `<div style="font-size:12px;color:var(--ink-mid);margin-top:8px;padding:6px 12px;">🏁 Done by <strong>${endTime}</strong></div>`;
 }
 function spShowRunning(){ document.getElementById('sp-setup').style.display='none'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='block'; }
 
