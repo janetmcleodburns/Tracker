@@ -343,39 +343,50 @@
     <!-- SETUP VIEW -->
     <div id="sp-setup">
 
-      <div class="sp-tasks-header">
-        <span class="sp-label">Your sprints today — drag to reorder</span>
-        <button class="sp-add-task-btn" onclick="spAddTask()">＋ Add Sprint</button>
-      </div>
-      <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:6px 0;">No sprints yet — click ＋ Add Sprint to begin</div></div>
-
       <!-- Add Sprint Form -->
-      <div id="sp-input-row" style="display:none;background:var(--cream);border-radius:10px;padding:12px;margin-top:8px;border:1px solid var(--border);">
-        <div class="form-col" style="margin-bottom:10px;">
-          <label class="sp-label">Task name</label>
-          <input type="text" id="sp-task-input" class="sp-task-input" placeholder="e.g. Market Reports ×5" style="width:100%;box-sizing:border-box;user-select:text;-webkit-user-select:text;">
+      <div style="background:var(--cream);border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid var(--border);">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-col" style="flex:1;min-width:200px;">
+            <label class="sp-label">Task name</label>
+            <input type="text" id="sp-task-input" class="sp-task-input" placeholder="e.g. Market Reports ×5" style="width:100%;box-sizing:border-box;user-select:text;-webkit-user-select:text;">
+          </div>
+          <div class="form-col">
+            <label class="sp-label">Sprint time</label>
+            <select id="sp-task-duration" class="sp-select">
+              <option value="15">15 min</option>
+              <option value="20">20 min</option>
+              <option value="25" selected>25 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">60 min</option>
+            </select>
+          </div>
+          <button class="sp-save-task-btn" onclick="spSaveTask()">＋ Add Sprint</button>
         </div>
-        <div class="form-col" style="margin-bottom:12px;">
-          <label class="sp-label">Sprint time</label>
-          <select id="sp-task-duration" class="sp-select">
+      </div>
+
+      <div class="sp-tasks-header">
+        <span class="sp-label">Your sprints — drag to reorder</span>
+      </div>
+      <div id="sp-task-list"><div style="font-size:12px;color:var(--ink-light);padding:6px 0;">No sprints yet — add one above</div></div>
+
+      <!-- Break + Build -->
+      <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;">
+        <div class="form-col">
+          <label class="sp-label">Break between sprints</label>
+          <select id="sp-break" class="sp-select">
+            <option value="0">No break</option>
+            <option value="5" selected>5 min</option>
+            <option value="10">10 min</option>
             <option value="15">15 min</option>
-            <option value="20">20 min</option>
-            <option value="25" selected>25 min</option>
-            <option value="30">30 min</option>
-            <option value="45">45 min</option>
-            <option value="60">60 min</option>
           </select>
         </div>
-        <div style="display:flex;gap:8px;">
-          <button class="sp-save-task-btn" onclick="spSaveTask()">Add Sprint</button>
-          <button class="sp-cancel-task-btn" onclick="spCancelTask()">Cancel</button>
+        <div style="display:flex;gap:8px;align-items:flex-end;">
+          <button class="sp-start-btn" onclick="spBuildSchedule()">▶ Build Schedule</button>
+          <button class="sp-clear-btn" onclick="spClear()">Clear All</button>
         </div>
       </div>
 
-      <div class="sp-actions">
-        <button class="sp-start-btn" onclick="spStart()">▶ Start Sprints</button>
-        <button class="sp-clear-btn" onclick="spClear()">Clear All</button>
-      </div>
     </div>
 
     <!-- SCHEDULE VIEW -->
@@ -1580,13 +1591,28 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ── Start — just run tasks in order, no time math ────────────────────────
-function spStart(){
+// ── Build schedule ────────────────────────────────────────────────────────
+function spBuildSchedule(){
   if(!spTasks.length){ alert('Add at least one sprint first!'); return; }
-  spBlocks = spTasks.map(t => ({ type:'sprint', task: t.name, durationMins: t.mins }));
+  const breakLen = parseInt(document.getElementById('sp-break').value);
+  const now = new Date(); now.setSeconds(0,0);
+  const blocks = [];
+  let cursor = new Date(now);
+  spTasks.forEach((t, i) => {
+    const timeStr = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+    blocks.push({ type:'sprint', time: timeStr, task: t.name, durationMins: t.mins });
+    cursor.setMinutes(cursor.getMinutes() + t.mins);
+    if(breakLen > 0 && i < spTasks.length - 1){
+      const bTime = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+      blocks.push({ type:'break', time: bTime, task: `☕ Break`, durationMins: breakLen });
+      cursor.setMinutes(cursor.getMinutes() + breakLen);
+    }
+  });
+  const endTime = cursor.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  spBlocks = blocks;
   spCurrentIdx = 0;
   spSave({ running: false });
-  spStartTimer();
+  spShowSchedule(endTime);
 }
 
 function spClear(){
@@ -1599,6 +1625,19 @@ function spClear(){
 
 // ── Views ────────────────────────────────────────────────────────────────
 function spShowSetup(){ document.getElementById('sp-setup').style.display='block'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='none'; }
+function spShowSchedule(endTime){
+  document.getElementById('sp-setup').style.display='none';
+  document.getElementById('sp-schedule').style.display='block';
+  document.getElementById('sp-running').style.display='none';
+  const el = document.getElementById('sp-blocks');
+  el.innerHTML = spBlocks.map((b,i) => `
+    <div class="sp-block ${b.type}">
+      <span class="sp-block-time">${b.time}</span>
+      <span class="sp-block-label">${b.type==='sprint'?'Sprint':'Break'}</span>
+      <span class="sp-block-task">${b.task}</span>
+      <span style="font-size:11px;color:var(--ink-light)">${b.durationMins}m</span>
+    </div>`).join('') + (endTime ? `<div style="font-size:12px;color:var(--ink-mid);margin-top:8px;padding:6px 12px;">🏁 Done by <strong>${endTime}</strong></div>` : '');
+}
 function spShowRunning(){ document.getElementById('sp-setup').style.display='none'; document.getElementById('sp-schedule').style.display='none'; document.getElementById('sp-running').style.display='block'; }
 
 // ── Timer ────────────────────────────────────────────────────────────────
@@ -1686,6 +1725,7 @@ function spReset(){
   spSave({ running: false });
   spRenderTaskList();
   spShowSetup();
+  document.getElementById('sp-pause-btn').style.display = '';
 }
 
 window.addEventListener('load', ()=>{ setTimeout(initSprintPlanner, 500); });
