@@ -1496,7 +1496,6 @@ let spTasks = [], spBlocks = [], spCurrentIdx = 0, spTimerInterval = null, spSec
 let spDragSrc = null;
 
 function initSprintPlanner(){
-  try{
   document.getElementById('sprint-planner').style.display = 'block';
   const saved = JSON.parse(localStorage.getItem(SP_KEY) || '{}');
   if(saved.tasks) spTasks = saved.tasks;
@@ -1507,17 +1506,14 @@ function initSprintPlanner(){
     if(saved.running && spCurrentIdx < spBlocks.length){
       spTotalSeconds = saved.spTotalSeconds || (spBlocks[spCurrentIdx].durationMins * 60);
       if(saved.pausedSecondsLeft != null){
-        // Was paused — restore paused state
         spSecondsLeft = saved.pausedSecondsLeft;
         spPaused = true;
         spShowRunning();
         spRenderRunning();
         document.getElementById('sp-pause-btn').textContent = '▶ Resume';
       } else {
-        // Was running — calc from wall clock
         const remaining = Math.max(0, Math.round((saved.sprintEndTime - Date.now()) / 1000));
         if(remaining <= 0){
-          // Sprint finished while away — advance
           spAdvance();
         } else {
           spSecondsLeft = remaining;
@@ -1531,7 +1527,6 @@ function initSprintPlanner(){
       spShowSchedule();
     }
   }
-  } catch(e){ console.warn('Sprint Planner init error:', e); }
 }
 
 function toggleSprintPlanner(){
