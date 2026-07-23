@@ -1458,7 +1458,7 @@ window.addEventListener('load',function(){
 });
 
 // ── CC Responses new-entry notification ──────────────────────────────────
-const CC_SCRIPT_URL = 'https://janetmcleodburns.github.io/Tracker/'; // paste your Apps Script Web App URL here after setup
+const CC_SCRIPT_URL = ''; // paste your Apps Script Web App URL here after setup
 const CC_SEEN_KEY   = 'cc_last_seen_count';
 
 function clearCCBadge(){
@@ -1496,6 +1496,7 @@ let spTasks = [], spBlocks = [], spCurrentIdx = 0, spTimerInterval = null, spSec
 let spDragSrc = null;
 
 function initSprintPlanner(){
+  try{
   document.getElementById('sprint-planner').style.display = 'block';
   const saved = JSON.parse(localStorage.getItem(SP_KEY) || '{}');
   if(saved.tasks) spTasks = saved.tasks;
@@ -1530,6 +1531,7 @@ function initSprintPlanner(){
       spShowSchedule();
     }
   }
+  } catch(e){ console.warn('Sprint Planner init error:', e); }
 }
 
 function toggleSprintPlanner(){
