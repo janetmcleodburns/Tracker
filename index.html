@@ -130,8 +130,9 @@
   .sp-current-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:4px;}
   .sp-current-task{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px;}
   .sp-timer{font-size:42px;font-weight:800;color:var(--teal);font-variant-numeric:tabular-nums;letter-spacing:-1px;margin-bottom:8px;}
-  .sp-progress-bar{height:6px;background:var(--border);border-radius:4px;overflow:hidden;}
-  .sp-progress-fill{height:100%;background:var(--teal);border-radius:4px;transition:width 1s linear;}
+  .sp-progress-slider{width:100%;-webkit-appearance:none;appearance:none;height:8px;border-radius:4px;outline:none;cursor:pointer;background:linear-gradient(to right, var(--teal) 0%, var(--teal) 0%, var(--border) 0%);}
+  .sp-progress-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--navy);cursor:grab;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+  .sp-progress-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--navy);cursor:grab;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
   .sp-up-next{font-size:13px;color:var(--ink-mid);margin-bottom:12px;}
   .sp-run-actions{display:flex;gap:10px;justify-content:center;}
   @media(max-width:600px){#sp-body{padding:12px 1rem 14px;}.sp-setup-row{gap:10px;}.sp-timer{font-size:36px;}}
@@ -400,7 +401,9 @@
         <div class="sp-current-label" id="sp-current-label">SPRINT 1</div>
         <div class="sp-current-task" id="sp-current-task">—</div>
         <div class="sp-timer" id="sp-timer">25:00</div>
-        <div class="sp-progress-bar"><div class="sp-progress-fill" id="sp-progress-fill"></div></div>
+        <input type="range" id="sp-progress-slider" class="sp-progress-slider" min="0" max="100" value="0"
+          oninput="spSliderAdjust(this.value)"
+          onchange="spSliderAdjust(this.value)">
       </div>
       <div class="sp-up-next">
         <span class="sp-label">Up next:</span>
@@ -1780,8 +1783,12 @@ function spRenderRunning(){
   document.getElementById('sp-current-label').textContent = `Sprint ${sprintNum} of ${total}`;
   document.getElementById('sp-current-task').textContent = block.task;
   document.getElementById('sp-timer').textContent = `${mins}:${secs}`;
-  const pct = ((spTotalSeconds - spSecondsLeft) / spTotalSeconds * 100).toFixed(1);
-  document.getElementById('sp-progress-fill').style.width = pct + '%';
+  const pct = Math.min(100, ((spTotalSeconds - spSecondsLeft) / spTotalSeconds * 100));
+  const slider = document.getElementById('sp-progress-slider');
+  if(slider && document.activeElement !== slider){
+    slider.value = pct;
+    slider.style.background = `linear-gradient(to right, var(--teal) ${pct}%, var(--border) ${pct}%)`;
+  }
   const next = spBlocks[spCurrentIdx + 1];
   document.getElementById('sp-next-task').textContent = next ? `${next.task} (${next.durationMins}m)` : '🎉 That\'s your last one!';
   // Remaining list
@@ -1825,13 +1832,26 @@ function spAllDone(){
   document.getElementById('sp-current-label').textContent = '🎉 All Done!';
   document.getElementById('sp-current-task').textContent = 'Great work today, Janet!';
   document.getElementById('sp-timer').textContent = '0:00';
-  document.getElementById('sp-progress-fill').style.width = '100%';
+  const s = document.getElementById('sp-progress-slider');
+  if(s){ s.value=100; s.style.background=`linear-gradient(to right, var(--teal) 100%, var(--border) 100%)`; }
   document.getElementById('sp-next-task').textContent = '';
   document.getElementById('sp-pause-btn').style.display = 'none';
   document.getElementById('sp-remaining-blocks').innerHTML = '';
 }
 
-function spTogglePause(){
+function spSliderAdjust(pct){
+  // User dragged slider — recalculate seconds left and reset wall-clock end time
+  pct = parseFloat(pct);
+  spSecondsLeft = Math.round(spTotalSeconds * (1 - pct / 100));
+  const sprintEndTime = Date.now() + (spSecondsLeft * 1000);
+  spSave({ running: true, sprintEndTime, spTotalSeconds, pausedSecondsLeft: spPaused ? spSecondsLeft : null });
+  // Update slider fill color
+  const slider = document.getElementById('sp-progress-slider');
+  if(slider) slider.style.background = `linear-gradient(to right, var(--teal) ${pct}%, var(--border) ${pct}%)`;
+  spRenderRunning();
+}
+
+
   spPaused = !spPaused;
   if(spPaused){
     // Save how many seconds remain when paused
