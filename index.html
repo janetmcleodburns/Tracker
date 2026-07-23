@@ -1501,13 +1501,30 @@ function initSprintPlanner(){
     spBlocks = saved.blocks;
     spCurrentIdx = saved.currentIdx || 0;
     if(saved.running && spCurrentIdx < spBlocks.length){
-      spSecondsLeft = saved.secondsLeft || 0;
-      spTotalSeconds = spBlocks[spCurrentIdx].durationMins * 60;
-      spShowRunning();
-      spRenderRunning();
-      spTick();
-    } else if(!saved.running){
-      spShowSetup();
+      spTotalSeconds = saved.spTotalSeconds || (spBlocks[spCurrentIdx].durationMins * 60);
+      if(saved.pausedSecondsLeft != null){
+        // Was paused — restore paused state
+        spSecondsLeft = saved.pausedSecondsLeft;
+        spPaused = true;
+        spShowRunning();
+        spRenderRunning();
+        document.getElementById('sp-pause-btn').textContent = '▶ Resume';
+      } else {
+        // Was running — calc from wall clock
+        const remaining = Math.max(0, Math.round((saved.sprintEndTime - Date.now()) / 1000));
+        if(remaining <= 0){
+          // Sprint finished while away — advance
+          spAdvance();
+        } else {
+          spSecondsLeft = remaining;
+          spPaused = false;
+          spShowRunning();
+          spRenderRunning();
+          spTick();
+        }
+      }
+    } else if(!saved.running && saved.blocks.length){
+      spShowSchedule();
     }
   }
 }
@@ -1732,10 +1749,11 @@ function spStartTimer(){
   if(spCurrentIdx >= spBlocks.length){ spAllDone(); return; }
   const block = spBlocks[spCurrentIdx];
   spTotalSeconds = block.durationMins * 60;
-  spSecondsLeft = spTotalSeconds;
+  const sprintEndTime = Date.now() + (spTotalSeconds * 1000);
   spPaused = false;
   document.getElementById('sp-pause-btn').textContent = '⏸ Pause';
   spShowRunning();
+  spSave({ running: true, sprintEndTime, spTotalSeconds, pausedSecondsLeft: null });
   spRenderRunning();
   spTick();
 }
@@ -1744,11 +1762,12 @@ function spTick(){
   if(spTimerInterval) clearInterval(spTimerInterval);
   spTimerInterval = setInterval(()=>{
     if(spPaused) return;
-    spSecondsLeft--;
-    spSave({ running: true, secondsLeft: spSecondsLeft });
+    const saved = JSON.parse(localStorage.getItem(SP_KEY)||'{}');
+    const endTime = saved.sprintEndTime || 0;
+    spSecondsLeft = Math.max(0, Math.round((endTime - Date.now()) / 1000));
     spRenderRunning();
     if(spSecondsLeft <= 0){ clearInterval(spTimerInterval); spAdvance(); }
-  }, 1000);
+  }, 500);
 }
 
 function spRenderRunning(){
@@ -1814,7 +1833,16 @@ function spAllDone(){
 
 function spTogglePause(){
   spPaused = !spPaused;
-  document.getElementById('sp-pause-btn').textContent = spPaused ? '▶ Resume' : '⏸ Pause';
+  if(spPaused){
+    // Save how many seconds remain when paused
+    spSave({ running: true, pausedSecondsLeft: spSecondsLeft });
+    document.getElementById('sp-pause-btn').textContent = '▶ Resume';
+  } else {
+    // Set a new end time based on remaining seconds
+    const sprintEndTime = Date.now() + (spSecondsLeft * 1000);
+    spSave({ running: true, sprintEndTime, pausedSecondsLeft: null });
+    document.getElementById('sp-pause-btn').textContent = '⏸ Pause';
+  }
 }
 
 function spSkip(){ if(spTimerInterval) clearInterval(spTimerInterval); spAdvance(); }
