@@ -320,7 +320,7 @@
 
   <!-- NL Submission Form (editable) -->
   <span style="display:inline-flex;align-items:center;gap:4px;">
-    <a class="quick-link" id="nl-submission-link" href="https://docs.google.com/forms/d/1y162w4nFZLxDQtpK20CvzCiQ3ccvsfRsh_EFMctGwME/edit" target="_blank">📝 NL Submission Form</a>
+    <a class="quick-link" id="nl-submission-link" href="https://docs.google.com/forms/d/1_H7Hd0nZWbSjsxbnY1MhNo8ledMUIdlF_hV7zB3xOtU/edit" target="_blank">📝 NL Submission Form</a>
     <button class="quick-link-edit" onclick="openNLLinkEdit()" title="Update URL for this month">✎</button>
   </span>
   <div class="quick-link-edit-form" id="nl-link-edit-form">
@@ -1453,8 +1453,7 @@ function saveNLLinkEdit(){
 window.addEventListener('load',function(){
   const saved=localStorage.getItem('newsletter-tracker-url');
   if(saved)document.getElementById('newsletter-link').href=saved;
-  const savedNL=localStorage.getItem('nl-submission-url');
-  if(savedNL)document.getElementById('nl-submission-link').href=savedNL;
+  localStorage.removeItem('nl-submission-url'); // always use the hardcoded URL
 });
 
 // ── CC Responses new-entry notification ──────────────────────────────────
@@ -1879,3 +1878,4 @@ window.addEventListener('load', ()=>{ setTimeout(initSprintPlanner, 500); });
 </script>
 </body>
 </html>
+
