@@ -1812,8 +1812,16 @@ function spRenderRunning(){
 
 function spAdvance(){
   if(spTimerInterval) clearInterval(spTimerInterval);
+  const doneBlock = spBlocks[spCurrentIdx - 1] || spBlocks[spCurrentIdx];
   spCurrentIdx++;
   if(spCurrentIdx >= spBlocks.length){ spAllDone(); return; }
+  const nextBlock = spBlocks[spCurrentIdx];
+  // Notification
+  if(Notification.permission === 'granted' && doneBlock){
+    new Notification(`✅ Sprint done: ${doneBlock.task}`, {
+      body: nextBlock.type === 'break' ? `☕ Break time! (${nextBlock.durationMins} min)` : `Up next: ${nextBlock.task}`
+    });
+  }
   try{
     const ctx=new AudioContext(); const o=ctx.createOscillator(); const g=ctx.createGain();
     o.connect(g); g.connect(ctx.destination); o.frequency.value=520;
@@ -1878,4 +1886,3 @@ window.addEventListener('load', ()=>{ setTimeout(initSprintPlanner, 500); });
 </script>
 </body>
 </html>
-
