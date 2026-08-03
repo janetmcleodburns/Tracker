@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint Timer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1B2D6B;
+    color: #fff;
+    width: 280px;
+    min-height: 160px;
+    padding: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+  }
+  #status { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #5BB8D4; margin-bottom: 4px; }
+  #task-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 12px; line-height: 1.3; min-height: 20px; }
+  #timer { font-size: 48px; font-weight: 800; color: #5BB8D4; font-variant-numeric: tabular-nums; letter-spacing: -2px; margin-bottom: 10px; }
+  #timer.urgent { color: #ff6b6b; }
+  .progress-bar { height: 6px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+  .progress-fill { height: 100%; background: #5BB8D4; border-radius: 4px; transition: width 0.5s linear; }
+  #progress-fill.urgent { background: #ff6b6b; }
+  #next { font-size: 11px; color: rgba(255,255,255,0.5); }
+  #next span { color: rgba(255,255,255,0.8); }
+  #idle { text-align: center; padding: 20px 0; }
+  #idle .idle-icon { font-size: 32px; margin-bottom: 8px; }
+  #idle .idle-text { font-size: 13px; color: rgba(255,255,255,0.6); }
+  #notify-btn { margin-top: 12px; background: rgba(91,184,212,0.2); border: 1px solid #5BB8D4; color: #5BB8D4; padding: 5px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; display: none; }
+  #notify-btn:hover { background: #5BB8D4; color: #1B2D6B; }
+  #paused-badge { display: none; font-size: 10px; font-weight: 700; background: rgba(255,107,107,0.2); border: 1px solid #ff6b6b; color: #ff6b6b; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div id="idle">
+  <div class="idle-icon">⏱</div>
+  <div class="idle-text">No sprint running.<br>Start one in your Tracker!</div>
+  <button id="notify-btn" onclick="requestNotifyPermission()">🔔 Enable Notifications</button>
+</div>
+
+<div id="running" style="display:none;">
+  <div id="status">Sprint 1 of 1</div>
+  <div id="task-name">—</div>
+  <div id="paused-badge">⏸ PAUSED</div>
+  <div id="timer">00:00</div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  <div id="next">Up next: <span id="next-task">—</span></div>
+</div>
+
+<script>
+const SP_KEY = 'sprintPlannerState';
+let lastIdx = -1;
+let notifyGranted = Notification.permission === 'granted';
+
+// Request notification permission
+function requestNotifyPermission(){
+  Notification.requestPermission().then(p => {
+    notifyGranted = p === 'granted';
+    document.getElementById('notify-btn').style.display = notifyGranted ? 'none' : 'inline-block';
+    if(notifyGranted) showNotification('🔔 Notifications enabled!', "You'll be notified when each sprint ends.");
+  });
+}
+
+function showNotification(title, body){
+  if(!notifyGranted) return;
+  try {
+    const n = new Notification(title, { body, icon: '', silent: false });
+    setTimeout(()=>n.close(), 6000);
+  } catch(e){}
+}
+
+function playChime(){
+  try{
+    const ctx = new AudioContext();
+    [520, 660, 780].forEach((freq, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime + i * 0.18);
+      g.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i * 0.18 + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.18 + 0.5);
+      o.start(ctx.currentTime + i * 0.18);
+      o.stop(ctx.currentTime + i * 0.18 + 0.5);
+    });
+  } catch(e){}
+}
+
+function tick(){
+  const raw = localStorage.getItem(SP_KEY);
+  if(!raw){ showIdle(); return; }
+
+  let saved;
+  try { saved = JSON.parse(raw); } catch(e){ showIdle(); return; }
+
+  if(!saved.running || !saved.blocks || !saved.blocks.length){ showIdle(); return; }
+
+  const idx = saved.currentIdx || 0;
+  const blocks = saved.blocks;
+  const block = blocks[idx];
+  if(!block){ showIdle(); return; }
+
+  // Check if sprint just advanced — fire notification
+  if(idx !== lastIdx && lastIdx !== -1){
+    const prev = blocks[lastIdx];
+    if(prev && prev.type === 'sprint'){
+      playChime();
+      showNotification(`✅ Sprint done: ${prev.task}`, block.type === 'break' ? `☕ Break time! (${block.durationMins} min)` : `Up next: ${block.task}`);
+    }
+  }
+  lastIdx = idx;
+
+  // Calculate seconds left
+  let secondsLeft, totalSeconds, paused;
+  totalSeconds = saved.spTotalSeconds || (block.durationMins * 60);
+  paused = saved.pausedSecondsLeft != null;
+
+  if(paused){
+    secondsLeft = saved.pausedSecondsLeft;
+  } else {
+    secondsLeft = Math.max(0, Math.round((saved.sprintEndTime - Date.now()) / 1000));
+  }
+
+  // Sprint count
+  const totalSprints = blocks.filter(b => b.type === 'sprint').length;
+  const sprintNum = blocks.slice(0, idx + 1).filter(b => b.type === 'sprint').length;
+
+  // Next block
+  const next = blocks[idx + 1];
+
+  // Update UI
+  document.getElementById('idle').style.display = 'none';
+  document.getElementById('running').style.display = 'block';
+
+  const isBreak = block.type === 'break';
+  document.getElementById('status').textContent = isBreak
+    ? `☕ Break ${block.durationMins} min`
+    : `Sprint ${sprintNum} of ${totalSprints}`;
+  document.getElementById('task-name').textContent = block.task;
+  document.getElementById('paused-badge').style.display = paused ? 'block' : 'none';
+
+  const mins = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+  const secs = (secondsLeft % 60).toString().padStart(2, '0');
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = `${mins}:${secs}`;
+  timerEl.className = secondsLeft <= 60 && !paused ? 'urgent' : '';
+
+  const pct = Math.min(100, ((totalSeconds - secondsLeft) / totalSeconds) * 100);
+  const fill = document.getElementById('progress-fill');
+  fill.style.width = pct + '%';
+  fill.className = 'progress-fill' + (secondsLeft <= 60 && !paused ? ' urgent' : '');
+
+  document.getElementById('next-task').textContent = next
+    ? `${next.task} (${next.durationMins}m)`
+    : '🎉 Last sprint!';
+}
+
+function showIdle(){
+  lastIdx = -1;
+  document.getElementById('idle').style.display = 'block';
+  document.getElementById('running').style.display = 'none';
+  // Show notify button if not yet granted
+  if(Notification.permission !== 'granted'){
+    document.getElementById('notify-btn').style.display = 'inline-block';
+  }
+}
+
+// Poll every second
+setInterval(tick, 1000);
+tick();
+</script>
+</body>
+</html>
