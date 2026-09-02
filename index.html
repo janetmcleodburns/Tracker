@@ -102,6 +102,9 @@
   .sp-break-col{display:flex;align-items:center;gap:4px;flex-shrink:0;}
   .sp-break-label{font-size:11px;color:var(--ink-light);}
   .sp-break-select{font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;color:var(--ink-mid);background:var(--white);}
+  .sp-task-edit-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:0 2px;opacity:0.5;flex-shrink:0;}
+  .sp-task-edit-btn:hover{opacity:1;}
+  .sp-inline-edit{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--cream);border:1px solid var(--teal-mid);border-radius:0 0 10px 10px;margin-top:-6px;margin-bottom:6px;}
   .sp-task-remove{background:none;border:none;color:var(--ink-light);cursor:pointer;font-size:14px;padding:0 2px;flex-shrink:0;}
   .sp-task-remove:hover{color:#e53935;}
   .sp-task-input-row{display:flex;gap:8px;align-items:center;margin:8px 0;}
@@ -1569,7 +1572,7 @@ function spRenderTaskList(){
     <div class="sp-task-row" id="sp-row-${i}" data-idx="${i}"
       ondragover="spDragOver(event,${i})"
       ondrop="spDrop(event,${i})">
-      <span class="sp-drag-handle" 
+      <span class="sp-drag-handle"
         onmousedown="spHandleMouseDown(event,${i})"
         ontouchstart="spHandleMouseDown(event,${i})">⠿</span>
       <span class="sp-task-name">${t.name}</span>
@@ -1585,13 +1588,49 @@ function spRenderTaskList(){
           <option value="20" ${(t.breakAfter||0)==20?'selected':''}>20m break</option>
         </select>` : '<span style="font-size:11px;color:var(--ink-light);">last sprint</span>'}
       </div>
+      <button class="sp-task-edit-btn" onclick="spToggleEdit(${i})" title="Edit">✏️</button>
       <button class="sp-task-remove" onclick="spRemoveTask(${i})">✕</button>
+    </div>
+    <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;">
+      <input type="text" class="sp-task-input" id="sp-edit-name-${i}" value="${t.name}" style="flex:1;user-select:text;-webkit-user-select:text;">
+      <select class="sp-select" id="sp-edit-mins-${i}">
+        <option value="15" ${t.mins==15?'selected':''}>15 min</option>
+        <option value="20" ${t.mins==20?'selected':''}>20 min</option>
+        <option value="25" ${t.mins==25?'selected':''}>25 min</option>
+        <option value="30" ${t.mins==30?'selected':''}>30 min</option>
+        <option value="45" ${t.mins==45?'selected':''}>45 min</option>
+        <option value="60" ${t.mins==60?'selected':''}>60 min</option>
+      </select>
+      <button class="sp-save-task-btn" onclick="spSaveEdit(${i})">Save</button>
+      <button class="sp-cancel-task-btn" onclick="spToggleEdit(${i})">Cancel</button>
     </div>`).join('');
 }
 
 function spSetBreak(idx, val){
   spTasks[idx].breakAfter = parseInt(val);
   spSave();
+}
+
+function spToggleEdit(idx){
+  const el = document.getElementById('sp-edit-' + idx);
+  const open = el.style.display !== 'none';
+  // Close all others first
+  document.querySelectorAll('.sp-inline-edit').forEach(e => e.style.display = 'none');
+  if(!open){
+    el.style.display = 'flex';
+    document.getElementById('sp-edit-name-' + idx).focus();
+    document.getElementById('sp-edit-name-' + idx).select();
+  }
+}
+
+function spSaveEdit(idx){
+  const name = document.getElementById('sp-edit-name-' + idx).value.trim();
+  const mins = parseInt(document.getElementById('sp-edit-mins-' + idx).value);
+  if(!name) return;
+  spTasks[idx].name = name;
+  spTasks[idx].mins = mins;
+  spSave();
+  spRenderTaskList();
 }
 
 function spHandleMouseDown(e, idx){
