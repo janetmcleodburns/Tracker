@@ -1593,12 +1593,11 @@ function spRenderTaskList(){
     </div>
     <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;" onmousedown="event.stopPropagation()">
       <div style="display:flex;gap:8px;align-items:center;width:100%;">
-        <input type="text" class="sp-task-input" id="sp-edit-name-${i}" value="${t.name}" 
-          style="flex:1;min-width:0;user-select:text;-webkit-user-select:text;" 
+        <input type="text" id="sp-edit-name-${i}" 
+          style="flex:1;min-width:0;padding:6px 10px;border:1px solid var(--teal-mid);border-radius:8px;font-size:13px;outline:none;user-select:text;-webkit-user-select:text;background:#fff;color:var(--ink);" 
           onmousedown="event.stopPropagation()" 
-          onclick="this.focus();this.select();" 
           onkeydown="if(event.key==='Enter')spSaveEdit(${i})">
-        <select class="sp-select" id="sp-edit-mins-${i}" style="flex-shrink:0;">
+        <select id="sp-edit-mins-${i}" style="flex-shrink:0;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;">
           <option value="15" ${t.mins==15?'selected':''}>15 min</option>
           <option value="20" ${t.mins==20?'selected':''}>20 min</option>
           <option value="25" ${t.mins==25?'selected':''}>25 min</option>
@@ -1620,12 +1619,13 @@ function spSetBreak(idx, val){
 function spToggleEdit(idx){
   const el = document.getElementById('sp-edit-' + idx);
   const open = el.style.display !== 'none';
-  // Close all others first
   document.querySelectorAll('.sp-inline-edit').forEach(e => e.style.display = 'none');
   if(!open){
-    el.style.display = 'flex';
-    document.getElementById('sp-edit-name-' + idx).focus();
-    document.getElementById('sp-edit-name-' + idx).select();
+    el.style.display = 'block';
+    const nameInput = document.getElementById('sp-edit-name-' + idx);
+    nameInput.value = spTasks[idx].name;
+    nameInput.focus();
+    nameInput.select();
   }
 }
 
