@@ -1591,8 +1591,8 @@ function spRenderTaskList(){
       <button class="sp-task-edit-btn" onclick="spToggleEdit(${i})" title="Edit">✏️</button>
       <button class="sp-task-remove" onclick="spRemoveTask(${i})">✕</button>
     </div>
-    <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;">
-      <input type="text" class="sp-task-input" id="sp-edit-name-${i}" value="${t.name}" style="flex:1;user-select:text;-webkit-user-select:text;">
+    <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;" onmousedown="event.stopPropagation()">
+      <input type="text" class="sp-task-input" id="sp-edit-name-${i}" value="${t.name}" style="flex:1;user-select:text;-webkit-user-select:text;" onmousedown="event.stopPropagation()" onclick="this.focus()" onkeydown="if(event.key==='Enter')spSaveEdit(${i})">
       <select class="sp-select" id="sp-edit-mins-${i}">
         <option value="15" ${t.mins==15?'selected':''}>15 min</option>
         <option value="20" ${t.mins==20?'selected':''}>20 min</option>
