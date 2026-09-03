@@ -1591,7 +1591,10 @@ function spRenderTaskList(){
       <button class="sp-task-edit-btn" onclick="spToggleEdit(${i})" title="Edit">✏️</button>
       <button class="sp-task-remove" onclick="spRemoveTask(${i})">✕</button>
     </div>
-    <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;" onmousedown="event.stopPropagation()">
+    <div class="sp-inline-edit" id="sp-edit-${i}" style="display:none;" 
+      onmousedown="event.stopPropagation()"
+      ondragover="spDragOver(event,${i})"
+      ondrop="spDrop(event,${i})">
       <div style="margin-bottom:8px;">
         <label style="font-size:11px;font-weight:700;color:var(--ink-light);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:4px;">Task name</label>
         <input type="text" id="sp-edit-name-${i}"
@@ -1644,6 +1647,8 @@ function spSaveEdit(idx){
 }
 
 function spHandleMouseDown(e, idx){
+  // Close any open edit forms before dragging
+  document.querySelectorAll('.sp-inline-edit').forEach(el => el.style.display = 'none');
   const row = document.getElementById('sp-row-' + idx);
   if(row){ row.setAttribute('draggable','true'); row.addEventListener('dragstart', ev=>spDragStart(ev,idx), {once:true}); }
 }
