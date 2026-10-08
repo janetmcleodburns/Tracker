@@ -1,0 +1,9 @@
+{
+  "name": "janet-tracker-v2",
+  "private": true,
+  "type": "module",
+  "description": "Static site; no build step. package.json only exists so the unit tests can import the ES modules.",
+  "scripts": {
+    "test": "TZ=America/Los_Angeles node --test tests/"
+  }
+}

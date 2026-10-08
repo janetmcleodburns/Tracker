@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Janet's Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A7F6E'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='Arial' fill='white'>✓</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%231A7F6E'/><text y='72' x='50' text-anchor='middle' font-size='60' font-family='Arial' fill='white'>✓</text></svg>">
+<meta name="theme-color" content="#1A7F6E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Janet's Tracker">
+<script>
+  // Apply saved theme before first paint to avoid a flash.
+  (function () { var t = localStorage.getItem('tracker-theme'); if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t; })();
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <h1>Janet's Tracker</h1>
+    <p>McLeod Real Estate Consulting</p>
+    <button class="sync-status" id="sync-status" data-action="refresh" title="Click to refresh now">
+      <span class="sync-dot" id="sync-dot"></span><span id="sync-label">Loading…</span>
+    </button>
+  </div>
+  <div class="header-right">
+    <div class="header-stats" id="header-stats"></div>
+    <button class="theme-btn" id="theme-btn" data-action="theme" title="Theme: auto / dark / light">🌓</button>
+  </div>
+</header>
+
+<nav class="quick-links-bar" id="quick-links"></nav>
+
+<section id="sprint-planner"></section>
+
+<nav class="tab-groups" id="tabs"></nav>
+
+<main>
+  <div class="toolbar" id="toolbar">
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="Search tasks, names, notes…" autocomplete="off" aria-label="Search">
+    </div>
+    <label class="sort-wrap" id="sort-wrap">Sort
+      <select id="sort" aria-label="Sort">
+        <option value="manual">Manual</option>
+        <option value="due">Due date</option>
+        <option value="priority">Priority</option>
+      </select>
+    </label>
+  </div>
+  <div class="toolbar chips" id="chips"></div>
+  <div id="list"><div class="loading">Loading…</div></div>
+  <div id="add-panels"></div>
+</main>
+
+<div id="menu" class="popover" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+
+<!-- REMINDER & RECURRENCE MODAL -->
+<div class="modal-overlay" id="reminder-modal">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="rm-title">
+    <div class="modal-title" id="rm-title">⏰ Reminder &amp; Recurrence</div>
+    <div class="modal-subtitle" id="rm-task-name"></div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Send reminder on due date</div><div class="toggle-sub">Email + browser notification</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="rm-reminder-on"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div><div class="toggle-label">Recurring task</div><div class="toggle-sub">Auto-recreates when completed</div></div>
+      <label class="toggle-switch"><input type="checkbox" id="rm-recurring"><span class="toggle-slider"></span></label>
+    </div>
+    <div id="rm-dates-section" hidden>
+      <div class="modal-section">Recurrence pattern</div>
+      <div class="rm-patterns">
+        <label><input type="radio" name="rm-pattern" value="monthly_day" checked> On the
+          <input type="number" id="rm-day-of-month" min="1" max="31" value="1" class="num"> of every month</label>
+        <label><input type="radio" name="rm-pattern" value="every_x_days"> Every
+          <input type="number" id="rm-x-days" min="1" value="7" class="num"> day(s)</label>
+        <label><input type="radio" name="rm-pattern" value="weekly"> Every week on
+          <select id="rm-weekday">
+            <option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+            <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+          </select></label>
+      </div>
+      <div class="form-grid-2">
+        <div class="form-col"><div class="modal-section">Start date</div><input type="date" id="rm-start-date"></div>
+        <div class="form-col"><div class="modal-section">End date (optional)</div><input type="date" id="rm-end-date"></div>
+      </div>
+      <div id="rm-preview" class="rm-preview"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" data-action="modal-close">Cancel</button>
+      <button class="modal-btn-primary" data-action="rm-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVE TO POSITION MODAL -->
+<div class="modal-overlay" id="position-modal">
+  <div class="modal-box narrow" role="dialog" aria-modal="true">
+    <div class="modal-title">Move to position</div>
+    <div class="modal-subtitle" id="pos-name"></div>
+    <div class="pos-row">
+      <label for="pos-input">Position:</label>
+      <input type="number" id="pos-input" min="1">
+      <span id="pos-max"></span>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" data-action="modal-close">Cancel</button>
+      <button class="modal-btn-primary" data-action="pos-save">Move</button>
+    </div>
+  </div>
+</div>
+
+<!-- COPY TO OTHER CATEGORIES MODAL -->
+<div class="modal-overlay" id="replicate-modal">
+  <div class="modal-box narrow" role="dialog" aria-modal="true">
+    <div class="modal-title">⧉ Copy task</div>
+    <div class="modal-subtitle">Copy this task to one or more categories</div>
+    <div class="rep-task-preview" id="rep-preview"></div>
+    <div class="modal-section">Select categories to copy to</div>
+    <div class="rep-cats" id="rep-cats"></div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" data-action="modal-close">Cancel</button>
+      <button class="rep-confirm-btn" id="rep-confirm" data-action="rep-save" disabled>Copy</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
