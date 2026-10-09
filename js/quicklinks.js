@@ -10,7 +10,7 @@ const LINKS = [
     url: 'https://docs.google.com/spreadsheets/d/1HTNv-Qd3aMbmKY9VJs3eFPJL0iadFItPdUqx0sjIRSc/edit?gid=1420608459#gid=1420608459',
     placeholder: 'Paste new Google Sheets URL…' },
   { id: 'nl', label: '📝 NL Submission Form', key: 'nl-submission-url',
-    url: 'https://docs.google.com/forms/d/1jWWVno-eMOOL5LmsXcRye6gKC7w8yK5-w8Vs1us9_78/edit',
+    url: 'https://docs.google.com/forms/d/e/1FAIpQLSf_8BLsH2GVnnbL5uG45g3ttBwZP3ZKhlHtLG8W_6dYATAxdw/viewform',
     placeholder: 'Paste new NL Submission Form URL…' },
   { id: 'cc', label: '💳 CC Responses', badge: true,
     url: 'https://docs.google.com/spreadsheets/d/100EHGl84dbSJLJxdjc7MaE77xIopL47z_CqV7tScxKA/edit?gid=22132404#gid=22132404' },
