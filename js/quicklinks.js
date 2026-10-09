@@ -53,6 +53,7 @@ async function checkCC() {
 }
 
 export function initQuickLinks() {
+  localStorage.removeItem('nl-submission-url'); // always use the hardcoded NL form URL
   const bar = $('#quick-links');
   bar.addEventListener('click', e => {
     const t = e.target;
