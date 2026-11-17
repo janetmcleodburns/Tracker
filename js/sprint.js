@@ -5,7 +5,7 @@ import { makeSortable } from './drag.js';
 
 const SP_KEY = 'sprintPlannerState';
 const COLLAPSE_KEY = 'sprintPlannerCollapsed';
-const DURATIONS = [15, 20, 25, 30, 45, 60];
+const DURATIONS = [15, 20, 25, 30, 45, 60, 90];
 const BREAKS = [0, 5, 10, 15, 20];
 
 let st = { tasks: [], blocks: [], currentIdx: 0, running: false, sprintEndTime: null, spTotalSeconds: 0, pausedSecondsLeft: null, secondsLeft: 0 };
